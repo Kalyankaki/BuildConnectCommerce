@@ -51,6 +51,20 @@ review before moving on.
 
 Full contract: see `docs/BUILD_SPEC.md`.
 
+## Conventions established (as built)
+- **Tenant resolution**: `src/proxy.ts` (Next 16 renamed `middleware`→`proxy`) parses the host
+  and sets `x-tenant-subdomain` / `x-tenant-custom-domain` headers — NO DB in proxy. Server code
+  resolves the tenant via `getCurrentTenant()` in `src/server/tenant.ts` (reads headers, queries
+  the global `tenants` registry with `adminDb`, React-`cache`d).
+- **Tenant-scoped reads/writes** go through `withTenant(tenantId, tx => …)` (sets
+  `app.current_tenant`; RLS enforces isolation). Cross-tenant/platform ops use `adminDb`.
+- **Route groups**: `src/app/(storefront)`, `(reseller)`; admin/installer come later. The
+  `(storefront)` layout applies brand tokens as CSS vars (`--brand-primary/secondary`).
+- **Local dev subdomains**: `acme.localhost:3000` (Chrome resolves `*.localhost`); test via
+  `curl -H "Host: acme.localhost:3000"`. Demo tenants: `acme` (all verticals), `northgate`
+  (toilets only), apex = platform landing.
+- `npm run db:setup && npm run db:migrate && npm run db:seed` to (re)build local data.
+
 ## Definition of done (every PR)
 - Typechecks, lints, builds. RLS verified for any new tenant-scoped table.
 - Pricing changes covered by a unit test in /src/lib/pricing/__tests__.
