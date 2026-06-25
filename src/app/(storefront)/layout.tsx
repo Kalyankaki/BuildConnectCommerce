@@ -4,8 +4,21 @@
  * storefront with their own colors — no rebuild (B.3 dynamic branding).
  */
 import type { CSSProperties } from "react";
+import type { Metadata } from "next";
 import Link from "next/link";
 import { getCurrentTenant } from "@/server/tenant";
+
+/** Per-tenant SEO: the reseller's brand in the title + description (B.12). */
+export async function generateMetadata(): Promise<Metadata> {
+  const tenant = await getCurrentTenant();
+  if (!tenant) {
+    return { title: "RenovateConnect", description: "White-label renovation commerce." };
+  }
+  return {
+    title: { default: tenant.displayName, template: `%s · ${tenant.displayName}` },
+    description: `Full-service renovation from ${tenant.displayName} — parts, delivery, professional install, and haulaway in one transparent price.`,
+  };
+}
 
 export default async function StorefrontLayout({ children }: { children: React.ReactNode }) {
   const tenant = await getCurrentTenant();

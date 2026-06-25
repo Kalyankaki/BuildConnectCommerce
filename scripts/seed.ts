@@ -213,6 +213,83 @@ async function main() {
     .values({ email: "admin@renovateconnect.test", fullName: "Platform Admin", isPlatformAdmin: true });
   console.log("✓ platform admin");
 
+  // Third demo tenant (green, all verticals).
+  const [riverside] = await adminDb
+    .insert(tenants)
+    .values({
+      slug: "riverside",
+      displayName: "Riverside Renovations",
+      status: "active",
+      primaryColor: "#047857",
+      secondaryColor: "#6ee7b7",
+      coverageZips: ["98036", "98037"],
+    })
+    .returning();
+  const [rsPolicy] = await adminDb
+    .insert(markupPolicies)
+    .values({ tenantId: riverside.id, name: "Value", defaultMarkupBps: 1800 })
+    .returning();
+  await adminDb.update(tenants).set({ defaultMarkupPolicyId: rsPolicy.id }).where(eq(tenants.id, riverside.id));
+  await adminDb
+    .insert(tenantCatalog)
+    .values(variants.map((v) => ({ tenantId: riverside.id, variantId: v.id, enabled: true })));
+  console.log("✓ demo tenant 'riverside' (green, all verticals)");
+
+  // Sample orders for acme so dashboards/reporting show data.
+  const oakNatV = variants.find((v) => v.sku === "OAK-NAT")!;
+  const [bookedOrder] = await adminDb
+    .insert(orders)
+    .values({
+      tenantId: acme.id,
+      customerEmail: "jane@example.com",
+      customerPhone: "+15555550150",
+      status: "booked",
+      serviceAddress: { line1: "123 Oak St", city: "Lynnwood", state: "WA", zip: "98036" },
+      subtotalCents: 150000,
+      deliveryCents: 7500,
+      laborCents: 70000,
+      haulawayCents: 20000,
+      taxCents: 25988,
+      totalCents: 273488,
+      platformMarginCents: 47500,
+      depositCents: 136744,
+      balanceCents: 136744,
+      depositPaid: true,
+      paymentProvider: "mock",
+      depositPaymentRef: "mock_pi_seed_booked",
+    })
+    .returning();
+  await adminDb.insert(orderItems).values({
+    tenantId: acme.id,
+    orderId: bookedOrder.id,
+    variantId: oakNatV.id,
+    qty: 200,
+    unitPriceCents: 750,
+    lineTotalCents: 273488,
+  });
+
+  await adminDb.insert(orders).values({
+    tenantId: acme.id,
+    customerEmail: "mike@example.com",
+    status: "completed",
+    serviceAddress: { line1: "9 Pine Ave", city: "Lynnwood", state: "WA", zip: "98037" },
+    subtotalCents: 60000,
+    deliveryCents: 4900,
+    laborCents: 36000,
+    haulawayCents: 7000,
+    taxCents: 11339,
+    totalCents: 119239,
+    platformMarginCents: 17000,
+    depositCents: 59620,
+    balanceCents: 59619,
+    depositPaid: true,
+    balancePaid: true,
+    paymentProvider: "mock",
+    depositPaymentRef: "mock_pi_seed_dep",
+    balancePaymentRef: "mock_pi_seed_bal",
+  });
+  console.log("✓ sample orders for acme");
+
   // ── Sanity: compute a sample quote with the pricing engine ──────────────
   const oakNat = variants.find((v) => v.sku === "OAK-NAT")!;
   const markupBps = resolveMarkupBps({
