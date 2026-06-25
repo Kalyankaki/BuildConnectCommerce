@@ -1,0 +1,1 @@
+ALTER TABLE "tenants" ADD COLUMN "coverage_zips" jsonb DEFAULT '[]'::jsonb NOT NULL;

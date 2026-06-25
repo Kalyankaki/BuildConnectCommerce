@@ -121,7 +121,15 @@ async function main() {
   const [acme] = await adminDb
     .insert(tenants)
     .values([
-      { slug: "acme", displayName: "Acme Remodel", status: "active", primaryColor: "#b91c1c", supportEmail: "help@acmeremodel.test" },
+      {
+        slug: "acme",
+        displayName: "Acme Remodel",
+        status: "active",
+        primaryColor: "#b91c1c",
+        secondaryColor: "#fca5a5",
+        supportEmail: "help@acmeremodel.test",
+        coverageZips: ["98036", "98037", "98101"],
+      },
     ])
     .returning();
 
@@ -134,10 +142,43 @@ async function main() {
 
   await adminDb.update(tenants).set({ defaultMarkupPolicyId: policy.id }).where(eq(tenants.id, acme.id));
 
+  // Acme sells everything.
   await adminDb.insert(tenantCatalog).values(
     variants.map((v) => ({ tenantId: acme.id, variantId: v.id, enabled: true, markupBps: null })),
   );
-  console.log("✓ demo tenant 'acme' + markup policy + catalog");
+  console.log("✓ demo tenant 'acme' (red, all verticals)");
+
+  // Second demo tenant: distinct brand + a narrower catalog (toilets only).
+  const [northgate] = await adminDb
+    .insert(tenants)
+    .values([
+      {
+        slug: "northgate",
+        displayName: "Northgate Home Co.",
+        status: "active",
+        primaryColor: "#1d4ed8",
+        secondaryColor: "#93c5fd",
+        supportEmail: "support@northgatehome.test",
+        coverageZips: ["98101"],
+      },
+    ])
+    .returning();
+
+  const [ngPolicy] = await adminDb
+    .insert(markupPolicies)
+    .values([{ tenantId: northgate.id, name: "Value", defaultMarkupBps: 1500 }])
+    .returning();
+
+  await adminDb
+    .update(tenants)
+    .set({ defaultMarkupPolicyId: ngPolicy.id })
+    .where(eq(tenants.id, northgate.id));
+
+  const toiletVariants = variants.filter((v) => v.sku.startsWith("TLT-"));
+  await adminDb.insert(tenantCatalog).values(
+    toiletVariants.map((v) => ({ tenantId: northgate.id, variantId: v.id, enabled: true, markupBps: null })),
+  );
+  console.log("✓ demo tenant 'northgate' (blue, toilets only)");
 
   // ── Sanity: compute a sample quote with the pricing engine ──────────────
   const oakNat = variants.find((v) => v.sku === "OAK-NAT")!;

@@ -107,6 +107,8 @@ export const tenants = pgTable("tenants", {
   // Per-tenant payment config (deposit %, take rate override) — nullable = use env/global
   depositPercent: integer("deposit_percent"),
   platformTakeRateBps: integer("platform_take_rate_bps"),
+  // ZIP codes this reseller serves (set during onboarding).
+  coverageZips: jsonb("coverage_zips").$type<string[]>().default([]).notNull(),
   createdAt,
   updatedAt,
 });
