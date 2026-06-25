@@ -2,13 +2,36 @@
 /**
  * DEV auth actions (sign in/out). TODO(M9/prod): replace with Supabase Auth.
  */
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { withTenant } from "@/db";
+import { adminDb, withTenant } from "@/db";
 import { memberships, profiles } from "@/db/schema";
 import { SESSION_COOKIE, signSession, type Session } from "@/server/auth";
 import { getCurrentTenant } from "@/server/tenant";
+
+async function setSessionCookie(session: Session): Promise<void> {
+  const store = await cookies();
+  store.set(SESSION_COOKIE, signSession(session), {
+    httpOnly: true,
+    sameSite: "lax",
+    path: "/",
+    maxAge: 60 * 60 * 24 * 7,
+  });
+}
+
+/** Dev: sign in as a platform admin (apex host). */
+export async function devSignInAdmin(formData: FormData): Promise<void> {
+  const profileId = String(formData.get("profileId") ?? "");
+  const [admin] = await adminDb
+    .select()
+    .from(profiles)
+    .where(and(eq(profiles.id, profileId), eq(profiles.isPlatformAdmin, true)))
+    .limit(1);
+  if (!admin) return;
+  await setSessionCookie({ profileId: admin.id, tenantId: null, role: "platform_admin", email: admin.email });
+  redirect("/admin");
+}
 
 /** Dev: sign in as a specific reseller membership of the current tenant. */
 export async function devSignIn(formData: FormData): Promise<void> {

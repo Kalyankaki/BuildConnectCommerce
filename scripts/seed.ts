@@ -207,6 +207,12 @@ async function main() {
   ]);
   console.log("✓ reseller owners for acme + northgate");
 
+  // Platform super-admin (apex host).
+  await adminDb
+    .insert(profiles)
+    .values({ email: "admin@renovateconnect.test", fullName: "Platform Admin", isPlatformAdmin: true });
+  console.log("✓ platform admin");
+
   // ── Sanity: compute a sample quote with the pricing engine ──────────────
   const oakNat = variants.find((v) => v.sku === "OAK-NAT")!;
   const markupBps = resolveMarkupBps({

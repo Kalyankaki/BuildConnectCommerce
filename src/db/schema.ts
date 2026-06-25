@@ -121,6 +121,8 @@ export const profiles = pgTable("profiles", {
   email: text("email").notNull().unique(),
   fullName: text("full_name"),
   phone: text("phone"),
+  // Platform super-admins are not tenant-scoped, so they're flagged here (not in memberships).
+  isPlatformAdmin: boolean("is_platform_admin").default(false).notNull(),
   createdAt,
 });
 

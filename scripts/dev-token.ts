@@ -17,6 +17,19 @@ function sign(session: object): string {
 
 async function main() {
   const slug = process.argv[2] ?? "acme";
+
+  // `admin` -> mint a platform_admin session (apex host).
+  if (slug === "admin") {
+    const [a] = await adminDb
+      .select()
+      .from(profiles)
+      .where(eq(profiles.isPlatformAdmin, true))
+      .limit(1);
+    if (!a) throw new Error("No platform admin");
+    console.log(sign({ profileId: a.id, tenantId: null, role: "platform_admin", email: a.email }));
+    return;
+  }
+
   const [tenant] = await adminDb.select().from(tenants).where(eq(tenants.slug, slug));
   if (!tenant) throw new Error(`No tenant "${slug}"`);
   const [m] = await adminDb

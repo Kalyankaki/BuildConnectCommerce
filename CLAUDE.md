@@ -89,6 +89,12 @@ Full contract: see `docs/BUILD_SPEC.md`.
   writes = `reseller-actions.ts` (each re-checks the reseller session).
 - Form actions must return `void` — use `*Form(formData)` wrappers, not `.bind()` on
   result-returning actions.
+- **Platform admin (M7)**: apex-host `/admin/*` gated by `getAdminSession` (role
+  `platform_admin`; flagged via `profiles.is_platform_admin`, NOT memberships). All admin reads/
+  writes use `adminDb` (service-role, bypasses RLS) — `admin-data.ts` / `admin-actions.ts`.
+  Covers master catalog/services/zones/tax CRUD, tenant approve/suspend, installer directory,
+  global reporting, and a tenant config export (D1). Dev admin sign-in: `/admin/login`;
+  `scripts/dev-token.ts admin` mints an admin cookie.
 
 ## Definition of done (every PR)
 - Typechecks, lints, builds. RLS verified for any new tenant-scoped table.

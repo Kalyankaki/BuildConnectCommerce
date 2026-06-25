@@ -51,3 +51,10 @@ export async function getResellerSession(tenantId: string): Promise<Session | nu
   if (!s || s.tenantId !== tenantId || !RESELLER_ROLES.has(s.role)) return null;
   return s;
 }
+
+/** Returns the session iff it is a platform admin; else null. */
+export async function getAdminSession(): Promise<Session | null> {
+  const s = await getSession();
+  if (!s || s.role !== "platform_admin") return null;
+  return s;
+}
