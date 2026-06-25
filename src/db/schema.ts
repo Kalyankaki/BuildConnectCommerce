@@ -65,6 +65,7 @@ export const appointmentStatus = pgEnum("appointment_status", [
   "canceled",
 ]);
 export const cartStatus = pgEnum("cart_status", ["active", "converted", "abandoned"]);
+export const orderEventType = pgEnum("order_event_type", ["status_change", "notification", "note"]);
 
 /* ───────────────────────── Shared column helpers ────────────────────── */
 
@@ -205,6 +206,8 @@ export const memberships = pgTable(
       .notNull()
       .references(() => profiles.id, { onDelete: "cascade" }),
     role: userRole("role").notNull(),
+    // For installers: ZIPs they serve (empty = serves all of the tenant's coverage).
+    coverageZips: jsonb("coverage_zips").$type<string[]>().default([]).notNull(),
     createdAt,
   },
   (t) => [unique("memberships_tenant_user_role").on(t.tenantId, t.userId, t.role), tenantIsolation],
@@ -362,6 +365,27 @@ export const cartItems = pgTable(
     configuratorInputs: jsonb("configurator_inputs").$type<Record<string, unknown>>(),
     // Snapshot of the JobQuote computed when the item was added (re-priced on load/checkout).
     quoteSnapshot: jsonb("quote_snapshot").$type<Record<string, unknown>>().notNull(),
+    createdAt,
+  },
+  () => [tenantIsolation],
+);
+
+/** Order lifecycle timeline + notification audit log (customer-visible timeline). */
+export const orderEvents = pgTable(
+  "order_events",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => tenants.id, { onDelete: "cascade" }),
+    orderId: uuid("order_id")
+      .notNull()
+      .references(() => orders.id, { onDelete: "cascade" }),
+    type: orderEventType("type").notNull(),
+    fromStatus: text("from_status"),
+    toStatus: text("to_status"),
+    channel: text("channel"), // email | sms (for notification events)
+    message: text("message"),
     createdAt,
   },
   () => [tenantIsolation],

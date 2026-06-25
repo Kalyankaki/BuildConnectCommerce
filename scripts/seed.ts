@@ -180,6 +180,19 @@ async function main() {
   );
   console.log("✓ demo tenant 'northgate' (blue, toilets only)");
 
+  // An installer for acme (so jobs can be scheduled/assigned).
+  const [installer] = await adminDb
+    .insert(profiles)
+    .values({ email: "ivan@acme.test", fullName: "Ivan Installer", phone: "+15555550100" })
+    .returning();
+  await adminDb.insert(memberships).values({
+    tenantId: acme.id,
+    userId: installer.id,
+    role: "installer",
+    coverageZips: ["98036", "98037", "98101"],
+  });
+  console.log("✓ installer 'Ivan' for acme");
+
   // ── Sanity: compute a sample quote with the pricing engine ──────────────
   const oakNat = variants.find((v) => v.sku === "OAK-NAT")!;
   const markupBps = resolveMarkupBps({

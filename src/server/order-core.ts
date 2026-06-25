@@ -6,7 +6,7 @@ import "server-only";
  */
 import { and, eq } from "drizzle-orm";
 import { withTenant } from "@/db";
-import { cartItems, carts, orderItems, orders } from "@/db/schema";
+import { appointments, cartItems, carts, orderEvents, orderItems, orders } from "@/db/schema";
 import { roundCents } from "@/lib/pricing";
 import { loadCartForToken } from "@/server/cart-core";
 import { chargeDeposit, selectProvider } from "@/server/payments";
@@ -128,5 +128,25 @@ export async function getOrderForTenant(tenant: Tenant, orderId: string) {
     if (!order) return null;
     const items = await tx.select().from(orderItems).where(eq(orderItems.orderId, orderId));
     return { order, items };
+  });
+}
+
+/** Load an order with its items, appointments, and timeline events (customer tracking page). */
+export async function getOrderTrackingForTenant(tenant: Tenant, orderId: string) {
+  return withTenant(tenant.id, async (tx) => {
+    const [order] = await tx.select().from(orders).where(eq(orders.id, orderId)).limit(1);
+    if (!order) return null;
+    const items = await tx.select().from(orderItems).where(eq(orderItems.orderId, orderId));
+    const appts = await tx
+      .select()
+      .from(appointments)
+      .where(eq(appointments.orderId, orderId))
+      .orderBy(appointments.windowStart);
+    const events = await tx
+      .select()
+      .from(orderEvents)
+      .where(and(eq(orderEvents.orderId, orderId), eq(orderEvents.type, "status_change")))
+      .orderBy(orderEvents.createdAt);
+    return { order, items, appointments: appts, events };
   });
 }

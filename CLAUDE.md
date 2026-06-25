@@ -74,6 +74,11 @@ Full contract: see `docs/BUILD_SPEC.md`.
   `placeOrderForTenant` (deposit-at-booking, balance-on-completion).
 - Pattern: keep request-context-free cores (`*-core.ts`, server-only) testable; thin `"use server"`
   wrappers handle cookies/host/redirect.
+- **Lifecycle (M5)**: `lifecycle-core.ts` `ORDER_TRANSITIONS` state machine; `transitionOrderForTenant`
+  charges balance on `completed`, records `order_events` (timeline) and notifications. Scheduling:
+  `scheduling-core.ts` (installer = membership role `installer` + `coverageZips`; `DAILY_CAPACITY`).
+  Notifications: `notifications.ts` (mock logs; Resend email / Twilio SMS behind env keys, via fetch).
+  Customer tracking page = `/orders/[id]` (progress + appointments + timeline).
 
 ## Definition of done (every PR)
 - Typechecks, lints, builds. RLS verified for any new tenant-scoped table.
