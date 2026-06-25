@@ -10,7 +10,8 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-  --font-display: var(--font-display); /* Space Grotesk — strong industrial headings */
+  --font-display: var(--font-display); /* Space Grotesk — strong sub-headings */
+  --font-serif: var(--font-serif); /* Playfair Display — grand luxury headlines */
 }
 
 html {
@@ -30,8 +31,14 @@ body {
   color: #0f172a;
 }
 
-/* Display headings utility */
+/* Display headings utility (industrial sans) */
 .font-display {
   font-family: var(--font-display), var(--font-sans), sans-serif;
   letter-spacing: -0.02em;
+}
+
+/* Luxury serif headline utility */
+.font-serif {
+  font-family: var(--font-serif), Georgia, "Times New Roman", serif;
+  letter-spacing: -0.015em;
 }

@@ -41,65 +41,69 @@ const SHOWCASE = [
 function MarketingLanding() {
   return (
     <>
-      {/* Hero */}
-      <section className="relative overflow-hidden bg-slate-950 text-white">
+      {/* Grand full-height hero — 3D centerpiece behind a luxury serif headline */}
+      <section className="relative flex min-h-[100svh] flex-col overflow-hidden bg-slate-950 text-white">
+        {/* Ambient gold light */}
         <div
-          className="pointer-events-none absolute inset-0 opacity-40"
-          style={{ background: "radial-gradient(50% 60% at 85% 10%, #f59e0b40 0%, transparent 70%)" }}
+          className="pointer-events-none absolute inset-0"
+          style={{ background: "radial-gradient(60% 50% at 50% 38%, #f59e0b33 0%, transparent 70%)" }}
         />
-        <div className="relative mx-auto grid max-w-6xl items-center gap-10 px-4 py-16 sm:px-6 sm:py-24 lg:grid-cols-2">
-          <div>
-            <span className="inline-flex items-center gap-2 rounded-full border border-amber-500/40 bg-amber-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.15em] text-amber-300">
-              <Hammer className="h-3.5 w-3.5" /> White-label renovation commerce
-            </span>
-            <h1 className="font-display mt-6 text-4xl font-bold leading-[1.04] sm:text-6xl">
-              Renovation materials.{" "}
-              <span className="bg-gradient-to-r from-amber-200 to-amber-500 bg-clip-text text-transparent">
-                Fully installed.
-              </span>
-            </h1>
-            <p className="mt-6 max-w-xl text-lg text-slate-300">
-              Launch your own branded storefront that sells the whole job — parts, delivery,
-              professional install, and haulaway of the old fixture — at one transparent price.
-            </p>
-            <div className="mt-8 flex flex-wrap gap-3">
-              <Link
-                href="/onboarding"
-                className="inline-flex items-center gap-2 rounded-lg bg-amber-500 px-6 py-3 font-semibold text-slate-950 shadow-lg shadow-amber-500/20 transition hover:bg-amber-400"
-              >
-                Start your storefront <ArrowRight className="h-4 w-4" />
-              </Link>
-              <a
-                href="#how"
-                className="inline-flex items-center gap-2 rounded-lg border border-white/20 px-6 py-3 font-semibold text-white transition hover:bg-white/10"
-              >
-                See how it works
-              </a>
-            </div>
-          </div>
-
-          {/* 3D object */}
-          <div className="h-64 w-full sm:h-80 lg:h-[460px]">
-            <Hero3D />
-          </div>
+        {/* Full-bleed 3D object */}
+        <div className="absolute inset-x-0 top-0 h-[72%]">
+          <Hero3D />
         </div>
+        {/* Legibility scrim */}
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-slate-950/30 via-transparent to-slate-950" />
 
-        {/* Bundle strip (full-width foot of hero) */}
-        <div className="relative border-t border-white/10">
-          <div className="mx-auto grid max-w-6xl grid-cols-2 divide-x divide-white/10 sm:grid-cols-4">
-            {BUNDLE.map(({ icon: Icon, label }) => (
-              <div key={label} className="flex items-center justify-center gap-2.5 px-4 py-5">
-                <Icon className="h-5 w-5 text-amber-400" />
-                <span className="text-sm font-medium">{label}</span>
-              </div>
-            ))}
+        {/* Content, anchored toward the lower third */}
+        <div className="relative z-10 mx-auto flex max-w-4xl flex-1 flex-col items-center justify-end px-6 pb-28 pt-28 text-center">
+          <span className="inline-flex items-center gap-2 rounded-full border border-amber-400/40 bg-amber-400/10 px-4 py-1.5 text-[0.7rem] font-semibold uppercase tracking-[0.25em] text-amber-300">
+            <Hammer className="h-3.5 w-3.5" /> White-label renovation commerce
+          </span>
+          <h1 className="font-serif mt-8 text-5xl font-semibold leading-[0.98] sm:text-7xl lg:text-8xl">
+            Renovation materials,
+            <span className="mt-1 block italic">
+              <span className="bg-gradient-to-r from-amber-200 via-amber-300 to-amber-500 bg-clip-text text-transparent">
+                fully installed.
+              </span>
+            </span>
+          </h1>
+          <p className="mt-7 max-w-xl text-lg leading-relaxed text-slate-300/90">
+            A branded storefront that sells the entire job — parts, delivery, master-craftsman
+            install, and haulaway of the old fixture — for one transparent price.
+          </p>
+          <div className="mt-9 flex flex-wrap items-center justify-center gap-4">
+            <Link
+              href="/onboarding"
+              className="inline-flex items-center gap-2 rounded-full bg-amber-500 px-8 py-3.5 font-semibold text-slate-950 shadow-xl shadow-amber-500/25 transition hover:bg-amber-400"
+            >
+              Start your storefront <ArrowRight className="h-4 w-4" />
+            </Link>
+            <a
+              href="#how"
+              className="inline-flex items-center gap-2 rounded-full border border-white/25 px-8 py-3.5 font-semibold text-white transition hover:bg-white/10"
+            >
+              See how it works
+            </a>
           </div>
         </div>
       </section>
 
+      {/* Bundle strip */}
+      <section className="border-y border-slate-200 bg-white">
+        <div className="mx-auto grid max-w-6xl grid-cols-2 divide-slate-100 sm:grid-cols-4 sm:divide-x">
+          {BUNDLE.map(({ icon: Icon, label }) => (
+            <div key={label} className="flex items-center justify-center gap-2.5 px-4 py-6 text-slate-800">
+              <Icon className="h-5 w-5 text-amber-500" />
+              <span className="text-sm font-semibold">{label}</span>
+            </div>
+          ))}
+        </div>
+      </section>
+
       {/* How it works */}
-      <section id="how" className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
-        <h2 className="font-display text-3xl font-bold tracking-tight">How it works</h2>
+      <section id="how" className="mx-auto max-w-6xl px-4 py-24 sm:px-6">
+        <h2 className="font-serif text-4xl font-semibold tracking-tight sm:text-5xl">How it works</h2>
         <div className="mt-10 grid gap-6 md:grid-cols-3">
           {[
             { icon: Store, title: "Spin up your storefront", body: "Pick your verticals, set your markup, add your brand. Your subdomain goes live instantly." },
@@ -121,8 +125,8 @@ function MarketingLanding() {
       {/* What we install */}
       <section id="verticals" className="border-y border-slate-200 bg-slate-50">
         <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
-          <h2 className="font-display text-3xl font-bold tracking-tight">What you can sell</h2>
-          <p className="mt-2 max-w-xl text-slate-600">
+          <h2 className="font-serif text-4xl font-semibold tracking-tight sm:text-5xl">What you can sell</h2>
+          <p className="mt-3 max-w-xl text-slate-600">
             Configurable verticals for the renovations homeowners actually buy — each sold as a
             complete, installed bundle.
           </p>
@@ -142,7 +146,7 @@ function MarketingLanding() {
       <section className="bg-amber-500">
         <div className="mx-auto flex max-w-6xl flex-col items-start justify-between gap-6 px-4 py-14 sm:px-6 md:flex-row md:items-center">
           <div>
-            <h2 className="font-display text-3xl font-bold tracking-tight text-slate-950">Ready to launch?</h2>
+            <h2 className="font-serif text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl">Ready to launch?</h2>
             <p className="mt-2 text-slate-900/80">Your branded, full-service storefront in minutes.</p>
           </div>
           <Link
@@ -168,7 +172,7 @@ async function TenantStorefront({ tenant }: { tenant: Awaited<ReturnType<typeof 
       <section className="relative overflow-hidden text-white" style={{ backgroundColor: "var(--brand-primary)" }}>
         <div className="pointer-events-none absolute inset-0 opacity-20" style={{ background: "radial-gradient(50% 80% at 90% 0%, #ffffff 0%, transparent 70%)" }} />
         <div className="relative mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
-          <h1 className="font-display max-w-3xl text-4xl font-bold leading-tight sm:text-5xl">
+          <h1 className="font-serif max-w-3xl text-5xl font-semibold leading-[1.02] sm:text-6xl">
             {tenant.displayName}
           </h1>
           <p className="mt-4 max-w-xl text-lg text-white/85">
@@ -200,7 +204,7 @@ async function TenantStorefront({ tenant }: { tenant: Awaited<ReturnType<typeof 
 
       {/* Verticals */}
       <section className="mx-auto max-w-6xl px-4 py-14 sm:px-6">
-        <h2 className="font-display text-2xl font-bold tracking-tight">What we install</h2>
+        <h2 className="font-serif text-3xl font-semibold tracking-tight sm:text-4xl">What we install</h2>
         {verticals.length === 0 ? (
           <p className="mt-4 text-slate-500">No product lines enabled yet.</p>
         ) : (

@@ -15,17 +15,17 @@ function Blob() {
     if (ref.current) ref.current.rotation.y += delta * 0.25;
   });
   return (
-    <Float speed={1.3} rotationIntensity={0.5} floatIntensity={1.1}>
-      <mesh ref={ref} scale={1.35}>
-        <icosahedronGeometry args={[1, 8]} />
+    <Float speed={1.2} rotationIntensity={0.45} floatIntensity={1.0}>
+      <mesh ref={ref} scale={1.7}>
+        <icosahedronGeometry args={[1, 12]} />
         <MeshDistortMaterial
-          color="#e0a200"
-          metalness={0.7}
-          roughness={0.18}
-          distort={0.34}
-          speed={1.5}
-          emissive="#7a4d00"
-          emissiveIntensity={0.25}
+          color="#e8b21f"
+          metalness={0.85}
+          roughness={0.12}
+          distort={0.3}
+          speed={1.3}
+          emissive="#6b4200"
+          emissiveIntensity={0.3}
         />
       </mesh>
     </Float>
