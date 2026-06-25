@@ -8,6 +8,9 @@ import { OnboardingForm } from "./onboarding-form";
 
 export const metadata = { title: "Create your storefront — RenovateConnect" };
 
+// Reads the catalog from the DB at request time — don't prerender at build.
+export const dynamic = "force-dynamic";
+
 export default async function OnboardingPage() {
   const available = await adminDb
     .select({ slug: verticals.slug, name: verticals.name, icon: verticals.icon })
