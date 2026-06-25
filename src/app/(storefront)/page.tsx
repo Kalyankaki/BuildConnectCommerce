@@ -52,18 +52,20 @@ export default async function HomePage() {
       ) : (
         <ul className="mt-4 grid gap-4 sm:grid-cols-2">
           {verticals.map((v) => (
-            <li
-              key={v.id}
-              className="rounded-xl border p-5"
-              style={{ borderColor: "var(--brand-secondary)" }}
-            >
-              <span className="text-2xl" aria-hidden>
-                {v.icon ?? "🔧"}
-              </span>
-              <div className="mt-2 font-medium">{v.name}</div>
-              <div className="text-sm text-slate-500">
-                Configure your {v.configuratorType === "area" ? "measured" : "per-unit"} job
-              </div>
+            <li key={v.id}>
+              <Link
+                href={`/shop/${v.slug}`}
+                className="block rounded-xl border p-5 transition hover:shadow-md focus:outline-none focus:ring-2 focus:ring-slate-400"
+                style={{ borderColor: "var(--brand-secondary)" }}
+              >
+                <span className="text-2xl" aria-hidden>
+                  {v.icon ?? "🔧"}
+                </span>
+                <div className="mt-2 font-medium">{v.name}</div>
+                <div className="text-sm text-slate-500">
+                  Configure your {v.configuratorType === "area" ? "measured" : "per-unit"} job →
+                </div>
+              </Link>
             </li>
           ))}
         </ul>
