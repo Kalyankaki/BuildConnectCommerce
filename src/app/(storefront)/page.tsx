@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { getCurrentTenant } from "@/server/tenant";
 import { getEnabledVerticals } from "@/server/storefront";
+import { Hero3D } from "./hero-3d";
 
 export default async function HomePage() {
   const tenant = await getCurrentTenant();
@@ -43,41 +44,52 @@ function MarketingLanding() {
       {/* Hero */}
       <section className="relative overflow-hidden bg-slate-950 text-white">
         <div
-          className="pointer-events-none absolute inset-0 opacity-30"
-          style={{ background: "radial-gradient(60% 60% at 80% 0%, #f59e0b55 0%, transparent 70%)" }}
+          className="pointer-events-none absolute inset-0 opacity-40"
+          style={{ background: "radial-gradient(50% 60% at 85% 10%, #f59e0b40 0%, transparent 70%)" }}
         />
-        <div className="relative mx-auto max-w-6xl px-4 py-20 sm:px-6 sm:py-28">
-          <span className="inline-flex items-center gap-2 rounded-full border border-amber-500/40 bg-amber-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-amber-300">
-            <Hammer className="h-3.5 w-3.5" /> White-label renovation commerce
-          </span>
-          <h1 className="font-display mt-6 max-w-3xl text-4xl font-bold leading-[1.05] sm:text-6xl">
-            Renovation materials.{" "}
-            <span className="text-amber-400">Fully installed.</span>
-          </h1>
-          <p className="mt-6 max-w-xl text-lg text-slate-300">
-            Launch your own branded storefront that sells the whole job — parts, delivery,
-            professional install, and haulaway of the old fixture — at one transparent price.
-          </p>
-          <div className="mt-8 flex flex-wrap gap-3">
-            <Link
-              href="/onboarding"
-              className="inline-flex items-center gap-2 rounded-lg bg-amber-500 px-6 py-3 font-semibold text-slate-950 transition hover:bg-amber-400"
-            >
-              Start your storefront <ArrowRight className="h-4 w-4" />
-            </Link>
-            <a
-              href="#how"
-              className="inline-flex items-center gap-2 rounded-lg border border-white/20 px-6 py-3 font-semibold text-white transition hover:bg-white/10"
-            >
-              See how it works
-            </a>
+        <div className="relative mx-auto grid max-w-6xl items-center gap-10 px-4 py-16 sm:px-6 sm:py-24 lg:grid-cols-2">
+          <div>
+            <span className="inline-flex items-center gap-2 rounded-full border border-amber-500/40 bg-amber-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.15em] text-amber-300">
+              <Hammer className="h-3.5 w-3.5" /> White-label renovation commerce
+            </span>
+            <h1 className="font-display mt-6 text-4xl font-bold leading-[1.04] sm:text-6xl">
+              Renovation materials.{" "}
+              <span className="bg-gradient-to-r from-amber-200 to-amber-500 bg-clip-text text-transparent">
+                Fully installed.
+              </span>
+            </h1>
+            <p className="mt-6 max-w-xl text-lg text-slate-300">
+              Launch your own branded storefront that sells the whole job — parts, delivery,
+              professional install, and haulaway of the old fixture — at one transparent price.
+            </p>
+            <div className="mt-8 flex flex-wrap gap-3">
+              <Link
+                href="/onboarding"
+                className="inline-flex items-center gap-2 rounded-lg bg-amber-500 px-6 py-3 font-semibold text-slate-950 shadow-lg shadow-amber-500/20 transition hover:bg-amber-400"
+              >
+                Start your storefront <ArrowRight className="h-4 w-4" />
+              </Link>
+              <a
+                href="#how"
+                className="inline-flex items-center gap-2 rounded-lg border border-white/20 px-6 py-3 font-semibold text-white transition hover:bg-white/10"
+              >
+                See how it works
+              </a>
+            </div>
           </div>
 
-          {/* Bundle strip */}
-          <div className="mt-14 grid max-w-2xl grid-cols-2 gap-px overflow-hidden rounded-xl border border-white/10 bg-white/10 sm:grid-cols-4">
+          {/* 3D object */}
+          <div className="h-64 w-full sm:h-80 lg:h-[460px]">
+            <Hero3D />
+          </div>
+        </div>
+
+        {/* Bundle strip (full-width foot of hero) */}
+        <div className="relative border-t border-white/10">
+          <div className="mx-auto grid max-w-6xl grid-cols-2 divide-x divide-white/10 sm:grid-cols-4">
             {BUNDLE.map(({ icon: Icon, label }) => (
-              <div key={label} className="flex flex-col items-center gap-2 bg-slate-950 px-4 py-5">
-                <Icon className="h-6 w-6 text-amber-400" />
+              <div key={label} className="flex items-center justify-center gap-2.5 px-4 py-5">
+                <Icon className="h-5 w-5 text-amber-400" />
                 <span className="text-sm font-medium">{label}</span>
               </div>
             ))}
