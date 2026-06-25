@@ -2,6 +2,7 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { ArrowRight, Clock, Loader2 } from "lucide-react";
 import { quoteJob, type QuoteResult } from "@/server/quote";
 import { addToCart } from "@/server/cart";
 import { formatCents } from "@/lib/format";
@@ -13,6 +14,8 @@ function variantLabel(v: PricedVariant): string {
   const attrs = Object.values(v.attributes ?? {}).join(" · ");
   return attrs ? `${attrs} (${v.sku})` : v.sku;
 }
+
+const field = "w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-200";
 
 export function Configurator({
   variants,
@@ -37,145 +40,103 @@ export function Configurator({
 
   const quantity = isArea ? Math.max(0, Math.round(length * width)) : Math.max(0, Math.round(units));
   const selected = variants.find((v) => v.id === variantId);
-
-  const estimate = useMemo(
-    () => (selected ? selected.unitPriceCents * quantity : 0),
-    [selected, quantity],
-  );
+  const estimate = useMemo(() => (selected ? selected.unitPriceCents * quantity : 0), [selected, quantity]);
 
   function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setAddError(null);
-    startTransition(async () => {
-      const r = await quoteJob({ variantId, zip, quantity });
-      setResult(r);
-    });
+    startTransition(async () => setResult(await quoteJob({ variantId, zip, quantity })));
   }
 
   function onAddToCart() {
     setAddError(null);
     startAdding(async () => {
       const r = await addToCart({ variantId, zip, quantity });
-      if (!r.ok) {
-        setAddError(r.error ?? "Could not add to cart");
-        return;
-      }
+      if (!r.ok) return setAddError(r.error ?? "Could not add to cart");
       router.push("/cart");
     });
   }
 
   return (
-    <form onSubmit={onSubmit} className="mt-6 space-y-5 rounded-xl border p-5">
-      <h2 className="text-lg font-semibold">Configure your job</h2>
+    <form onSubmit={onSubmit} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <h2 className="font-display text-lg font-semibold">Configure your job</h2>
+      <p className="mt-1 text-sm text-slate-500">Get your full installed price in seconds.</p>
 
-      <label className="block">
-        <span className="mb-1 block text-sm font-medium">Option</span>
-        <select
-          value={variantId}
-          onChange={(e) => setVariantId(e.target.value)}
-          className="w-full rounded-lg border px-3 py-2"
-        >
-          {variants.map((v) => (
-            <option key={v.id} value={v.id}>
-              {variantLabel(v)} — {formatCents(v.unitPriceCents)}
-              {v.unitOfMeasure === "each" ? " / unit" : ` / ${v.unitOfMeasure}`}
-            </option>
-          ))}
-        </select>
-      </label>
-
-      {isArea ? (
-        <fieldset className="grid grid-cols-2 gap-4">
-          <legend className="mb-1 text-sm font-medium">Room size</legend>
-          <label className="block">
-            <span className="mb-1 block text-xs text-slate-500">Length (ft)</span>
-            <input
-              type="number"
-              min={1}
-              value={length}
-              onChange={(e) => setLength(Number(e.target.value))}
-              className="w-full rounded-lg border px-3 py-2"
-            />
-          </label>
-          <label className="block">
-            <span className="mb-1 block text-xs text-slate-500">Width (ft)</span>
-            <input
-              type="number"
-              min={1}
-              value={width}
-              onChange={(e) => setWidth(Number(e.target.value))}
-              className="w-full rounded-lg border px-3 py-2"
-            />
-          </label>
-          <p className="col-span-2 text-sm text-slate-600">
-            Area: <strong>{quantity} sq ft</strong>
-          </p>
-        </fieldset>
-      ) : (
+      <div className="mt-5 space-y-4">
         <label className="block">
-          <span className="mb-1 block text-sm font-medium">Quantity</span>
-          <input
-            type="number"
-            min={1}
-            value={units}
-            onChange={(e) => setUnits(Number(e.target.value))}
-            className="w-full rounded-lg border px-3 py-2"
-          />
+          <span className="mb-1 block text-sm font-medium text-slate-700">Option</span>
+          <select value={variantId} onChange={(e) => setVariantId(e.target.value)} className={field}>
+            {variants.map((v) => (
+              <option key={v.id} value={v.id}>
+                {variantLabel(v)} — {formatCents(v.unitPriceCents)}{v.unitOfMeasure === "each" ? " / unit" : ` / ${v.unitOfMeasure}`}
+              </option>
+            ))}
+          </select>
         </label>
-      )}
 
-      <label className="block">
-        <span className="mb-1 block text-sm font-medium">Service ZIP code</span>
-        <input
-          inputMode="numeric"
-          value={zip}
-          onChange={(e) => setZip(e.target.value)}
-          placeholder="98036"
-          className="w-full rounded-lg border px-3 py-2"
-          aria-describedby="zip-help"
-        />
-        <span id="zip-help" className="mt-1 block text-xs text-slate-500">
-          {coverageZips.length > 0 ? `We serve: ${coverageZips.join(", ")}` : "Enter your ZIP"}
-        </span>
-      </label>
+        {isArea ? (
+          <fieldset>
+            <legend className="mb-1 text-sm font-medium text-slate-700">Room size</legend>
+            <div className="grid grid-cols-2 gap-3">
+              <label className="block">
+                <span className="mb-1 block text-xs text-slate-500">Length (ft)</span>
+                <input type="number" min={1} value={length} onChange={(e) => setLength(Number(e.target.value))} className={field} />
+              </label>
+              <label className="block">
+                <span className="mb-1 block text-xs text-slate-500">Width (ft)</span>
+                <input type="number" min={1} value={width} onChange={(e) => setWidth(Number(e.target.value))} className={field} />
+              </label>
+            </div>
+            <p className="mt-2 text-sm text-slate-600">Area: <strong>{quantity} sq ft</strong></p>
+          </fieldset>
+        ) : (
+          <label className="block">
+            <span className="mb-1 block text-sm font-medium text-slate-700">Quantity</span>
+            <input type="number" min={1} value={units} onChange={(e) => setUnits(Number(e.target.value))} className={field} />
+          </label>
+        )}
 
-      <p className="text-sm text-slate-500">
-        Parts estimate: {formatCents(estimate)} — get the full installed price below.
-      </p>
+        <label className="block">
+          <span className="mb-1 block text-sm font-medium text-slate-700">Service ZIP code</span>
+          <input inputMode="numeric" value={zip} onChange={(e) => setZip(e.target.value)} placeholder="98036" className={field} aria-describedby="zip-help" />
+          <span id="zip-help" className="mt-1 block text-xs text-slate-500">
+            {coverageZips.length > 0 ? `We serve: ${coverageZips.join(", ")}` : "Enter your ZIP"}
+          </span>
+        </label>
+      </div>
+
+      <div className="mt-4 flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-600">
+        <span>Parts estimate</span>
+        <span className="font-semibold text-slate-900">{formatCents(estimate)}</span>
+      </div>
 
       <button
         type="submit"
         disabled={pending || !selected || quantity < 1 || !zip}
-        className="w-full rounded-lg px-6 py-3 font-medium text-white disabled:opacity-50"
+        className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg px-6 py-3 font-semibold text-white transition disabled:opacity-50"
         style={{ backgroundColor: "var(--brand-primary)" }}
       >
-        {pending ? "Calculating…" : "Get my installed price"}
+        {pending ? <><Loader2 className="h-4 w-4 animate-spin" /> Calculating…</> : "Get my installed price"}
       </button>
 
-      <div aria-live="polite">
+      <div aria-live="polite" className="mt-4">
         {result && !result.ok && (
-          <p className="rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700">
-            {result.error}
-          </p>
+          <p className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{result.error}</p>
         )}
         {result && result.ok && <QuoteBreakdown result={result} />}
       </div>
 
       {result && result.ok && (
-        <div className="space-y-2">
-          {addError && (
-            <p className="rounded-lg border border-red-300 bg-red-50 px-4 py-2 text-sm text-red-700">
-              {addError}
-            </p>
-          )}
+        <div className="mt-4 space-y-2">
+          {addError && <p className="rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">{addError}</p>}
           <button
             type="button"
             onClick={onAddToCart}
             disabled={adding}
-            className="w-full rounded-lg border-2 px-6 py-3 font-medium disabled:opacity-50"
+            className="flex w-full items-center justify-center gap-2 rounded-lg border-2 px-6 py-3 font-semibold transition disabled:opacity-50"
             style={{ borderColor: "var(--brand-primary)", color: "var(--brand-primary)" }}
           >
-            {adding ? "Adding…" : "Add to cart"}
+            {adding ? <><Loader2 className="h-4 w-4 animate-spin" /> Adding…</> : <>Add to cart <ArrowRight className="h-4 w-4" /></>}
           </button>
         </div>
       )}
@@ -185,29 +146,29 @@ export function Configurator({
 
 function QuoteBreakdown({ result }: { result: Extract<QuoteResult, { ok: true }> }) {
   const q = result.quote;
-  const row = (label: string, value: string) => (
-    <div className="flex justify-between py-1">
+  const Row = ({ label, value }: { label: string; value: string }) => (
+    <div className="flex justify-between py-1.5">
       <span className="text-slate-600">{label}</span>
-      <span className="font-medium">{value}</span>
+      <span className="font-medium text-slate-900">{value}</span>
     </div>
   );
   return (
-    <div className="rounded-xl border border-green-300 bg-green-50 p-5">
-      <h3 className="text-base font-semibold text-green-900">Your full-service quote</h3>
+    <div className="rounded-xl border border-emerald-200 bg-emerald-50/60 p-5">
+      <h3 className="font-display text-base font-semibold text-emerald-900">Your full-service quote</h3>
       <div className="mt-3 text-sm">
-        {row("Parts", formatCents(q.subtotalCents))}
-        {row("Delivery", formatCents(q.deliveryCents))}
-        {row("Install (labor)", q.needsQuote && q.laborCents === 0 ? "Quote after site visit" : formatCents(q.laborCents))}
-        {row("Haulaway (old fixture)", formatCents(q.haulawayCents))}
-        {row("Tax", formatCents(q.taxCents))}
-        <div className="mt-2 flex justify-between border-t pt-2 text-base">
-          <span className="font-semibold">Total{q.needsQuote ? " (excl. labor)" : ""}</span>
-          <span className="font-bold">{formatCents(q.totalCents)}</span>
+        <Row label="Parts" value={formatCents(q.subtotalCents)} />
+        <Row label="Delivery" value={formatCents(q.deliveryCents)} />
+        <Row label="Install (labor)" value={q.needsQuote && q.laborCents === 0 ? "Quote after site visit" : formatCents(q.laborCents)} />
+        <Row label="Haulaway (old fixture)" value={formatCents(q.haulawayCents)} />
+        <Row label="Tax" value={formatCents(q.taxCents)} />
+        <div className="mt-2 flex justify-between border-t border-emerald-200 pt-2.5 text-base">
+          <span className="font-semibold text-slate-900">Total{q.needsQuote ? " (excl. labor)" : ""}</span>
+          <span className="font-bold text-slate-900">{formatCents(q.totalCents)}</span>
         </div>
       </div>
-      <p className="mt-3 text-sm text-green-800">
-        Estimated lead time: {result.leadTimeDays} days
-        {q.needsQuote ? " · final install price confirmed after a site visit" : ""}
+      <p className="mt-3 flex items-center gap-1.5 text-sm text-emerald-800">
+        <Clock className="h-4 w-4" /> Est. lead time: {result.leadTimeDays} days
+        {q.needsQuote ? " · final labor confirmed after a site visit" : ""}
       </p>
     </div>
   );
