@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { getCurrentTenant } from "@/server/tenant";
 import { getEnabledVerticals } from "@/server/storefront";
-import { Hero3D } from "./hero-3d";
+import { HeroExperience } from "./hero-experience";
 
 export default async function HomePage() {
   const tenant = await getCurrentTenant();
@@ -41,52 +41,9 @@ const SHOWCASE = [
 function MarketingLanding() {
   return (
     <>
-      {/* Grand full-height hero — 3D centerpiece behind a luxury serif headline */}
-      <section className="relative flex min-h-[100svh] flex-col overflow-hidden bg-slate-950 text-white">
-        {/* Ambient gold light */}
-        <div
-          className="pointer-events-none absolute inset-0"
-          style={{ background: "radial-gradient(60% 50% at 50% 38%, #f59e0b33 0%, transparent 70%)" }}
-        />
-        {/* Full-bleed 3D object */}
-        <div className="absolute inset-x-0 top-0 h-[72%]">
-          <Hero3D />
-        </div>
-        {/* Legibility scrim */}
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-slate-950/30 via-transparent to-slate-950" />
-
-        {/* Content, anchored toward the lower third */}
-        <div className="relative z-10 mx-auto flex max-w-4xl flex-1 flex-col items-center justify-end px-6 pb-28 pt-28 text-center">
-          <span className="inline-flex items-center gap-2 rounded-full border border-amber-400/40 bg-amber-400/10 px-4 py-1.5 text-[0.7rem] font-semibold uppercase tracking-[0.25em] text-amber-300">
-            <Hammer className="h-3.5 w-3.5" /> White-label renovation commerce
-          </span>
-          <h1 className="font-serif mt-8 text-5xl font-semibold leading-[0.98] sm:text-7xl lg:text-8xl">
-            Renovation materials,
-            <span className="mt-1 block italic">
-              <span className="bg-gradient-to-r from-amber-200 via-amber-300 to-amber-500 bg-clip-text text-transparent">
-                fully installed.
-              </span>
-            </span>
-          </h1>
-          <p className="mt-7 max-w-xl text-lg leading-relaxed text-slate-300/90">
-            A branded storefront that sells the entire job — parts, delivery, master-craftsman
-            install, and haulaway of the old fixture — for one transparent price.
-          </p>
-          <div className="mt-9 flex flex-wrap items-center justify-center gap-4">
-            <Link
-              href="/onboarding"
-              className="inline-flex items-center gap-2 rounded-full bg-amber-500 px-8 py-3.5 font-semibold text-slate-950 shadow-xl shadow-amber-500/25 transition hover:bg-amber-400"
-            >
-              Start your storefront <ArrowRight className="h-4 w-4" />
-            </Link>
-            <a
-              href="#how"
-              className="inline-flex items-center gap-2 rounded-full border border-white/25 px-8 py-3.5 font-semibold text-white transition hover:bg-white/10"
-            >
-              See how it works
-            </a>
-          </div>
-        </div>
+      {/* Grand interactive 3D room hero */}
+      <section className="relative min-h-[100svh] overflow-hidden bg-slate-950">
+        <HeroExperience />
       </section>
 
       {/* Bundle strip */}
