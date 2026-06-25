@@ -56,3 +56,26 @@ export async function scheduleOrder(input: unknown): Promise<ActionResult> {
   if (res.ok) revalidatePath(`/orders/${parsed.data.orderId}`);
   return res.ok ? { ok: true } : { ok: false, error: res.error };
 }
+
+/** Form-action variant: advance an order to the status named in the form. */
+export async function advanceOrderForm(formData: FormData): Promise<void> {
+  const orderId = String(formData.get("orderId") ?? "");
+  const to = String(formData.get("to") ?? "") as OrderStatus;
+  if (!orderId) return;
+  await advanceOrder(orderId, to);
+}
+
+/** Form-action variant used by the reseller order detail page. */
+export async function scheduleOrderForm(formData: FormData): Promise<void> {
+  const orderId = String(formData.get("orderId") ?? "");
+  const date = String(formData.get("date") ?? ""); // yyyy-mm-ddThh:mm (local)
+  if (!orderId || !date) return;
+  const start = new Date(date);
+  if (Number.isNaN(start.getTime())) return;
+  const end = new Date(start.getTime() + 2 * 60 * 60 * 1000);
+
+  const tenant = await getCurrentTenant();
+  if (!tenant) return;
+  await scheduleOrderForTenant(tenant, orderId, { windowStart: start, windowEnd: end });
+  revalidatePath(`/reseller/orders/${orderId}`);
+}

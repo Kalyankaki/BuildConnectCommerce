@@ -79,6 +79,16 @@ Full contract: see `docs/BUILD_SPEC.md`.
   `scheduling-core.ts` (installer = membership role `installer` + `coverageZips`; `DAILY_CAPACITY`).
   Notifications: `notifications.ts` (mock logs; Resend email / Twilio SMS behind env keys, via fetch).
   Customer tracking page = `/orders/[id]` (progress + appointments + timeline).
+- **Auth (M6, DEV SHIM)**: `auth.ts` signs an HMAC session cookie (`rc_session`) carrying
+  profile+tenant+role. `getResellerSession(tenantId)` gates the reseller dashboard.
+  `TODO(M9/prod): replace with Supabase Auth`. Dev sign-in at `/reseller/login` lists seeded
+  reseller owners. `scripts/dev-token.ts` mints a session cookie for curl/testing.
+- **Reseller dashboard** lives at real path `/reseller/*` (NOT a route group) on the tenant host:
+  overview, catalog & markup, orders kanban + detail (schedule/advance via `order-actions`),
+  branding editor (live preview), payouts, custom domain. Reads = `reseller-data.ts`,
+  writes = `reseller-actions.ts` (each re-checks the reseller session).
+- Form actions must return `void` — use `*Form(formData)` wrappers, not `.bind()` on
+  result-returning actions.
 
 ## Definition of done (every PR)
 - Typechecks, lints, builds. RLS verified for any new tenant-scoped table.

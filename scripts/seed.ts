@@ -193,6 +193,20 @@ async function main() {
   });
   console.log("✓ installer 'Ivan' for acme");
 
+  // Reseller owners (for dev sign-in to the dashboard).
+  const owners = await adminDb
+    .insert(profiles)
+    .values([
+      { email: "owner@acme.test", fullName: "Acme Owner" },
+      { email: "owner@northgate.test", fullName: "Northgate Owner" },
+    ])
+    .returning();
+  await adminDb.insert(memberships).values([
+    { tenantId: acme.id, userId: owners[0].id, role: "reseller_owner" },
+    { tenantId: northgate.id, userId: owners[1].id, role: "reseller_owner" },
+  ]);
+  console.log("✓ reseller owners for acme + northgate");
+
   // ── Sanity: compute a sample quote with the pricing engine ──────────────
   const oakNat = variants.find((v) => v.sku === "OAK-NAT")!;
   const markupBps = resolveMarkupBps({
