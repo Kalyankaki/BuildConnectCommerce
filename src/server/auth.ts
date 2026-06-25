@@ -58,3 +58,10 @@ export async function getAdminSession(): Promise<Session | null> {
   if (!s || s.role !== "platform_admin") return null;
   return s;
 }
+
+/** Returns the session iff it is an installer for the given tenant; else null. */
+export async function getInstallerSession(tenantId: string): Promise<Session | null> {
+  const s = await getSession();
+  if (!s || s.tenantId !== tenantId || s.role !== "installer") return null;
+  return s;
+}

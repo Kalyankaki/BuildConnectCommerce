@@ -30,15 +30,16 @@ async function main() {
     return;
   }
 
+  const role = (process.argv[3] ?? "reseller_owner") as "reseller_owner" | "installer";
   const [tenant] = await adminDb.select().from(tenants).where(eq(tenants.slug, slug));
   if (!tenant) throw new Error(`No tenant "${slug}"`);
   const [m] = await adminDb
     .select({ pid: profiles.id, email: profiles.email, role: memberships.role })
     .from(memberships)
     .innerJoin(profiles, eq(profiles.id, memberships.userId))
-    .where(and(eq(memberships.tenantId, tenant.id), eq(memberships.role, "reseller_owner")))
+    .where(and(eq(memberships.tenantId, tenant.id), eq(memberships.role, role)))
     .limit(1);
-  if (!m) throw new Error(`No reseller_owner for "${slug}"`);
+  if (!m) throw new Error(`No ${role} for "${slug}"`);
   console.log(sign({ profileId: m.pid, tenantId: tenant.id, role: m.role, email: m.email }));
 }
 

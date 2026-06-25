@@ -56,14 +56,8 @@ export async function devSignIn(formData: FormData): Promise<void> {
     role: row.role,
     email: row.email,
   };
-  const store = await cookies();
-  store.set(SESSION_COOKIE, signSession(session), {
-    httpOnly: true,
-    sameSite: "lax",
-    path: "/",
-    maxAge: 60 * 60 * 24 * 7,
-  });
-  redirect("/reseller");
+  await setSessionCookie(session);
+  redirect(row.role === "installer" ? "/installer" : "/reseller");
 }
 
 export async function signOut(): Promise<void> {

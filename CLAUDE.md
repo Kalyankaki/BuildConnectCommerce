@@ -95,6 +95,10 @@ Full contract: see `docs/BUILD_SPEC.md`.
   Covers master catalog/services/zones/tax CRUD, tenant approve/suspend, installer directory,
   global reporting, and a tenant config export (D1). Dev admin sign-in: `/admin/login`;
   `scripts/dev-token.ts admin` mints an admin cookie.
+- **Installer view (M8)**: tenant-host `/installer/*` gated by `getInstallerSession`. Installer
+  sees only their assigned appointments (`installer-data.ts`), starts/finishes them, and completes
+  the order → balance charged via the lifecycle machine (`installer-actions.ts`). Dev sign-in
+  reuses `/installer/login`; `scripts/dev-token.ts <slug> installer` mints an installer cookie.
 
 ## Definition of done (every PR)
 - Typechecks, lints, builds. RLS verified for any new tenant-scoped table.
