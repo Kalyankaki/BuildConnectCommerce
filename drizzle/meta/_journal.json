@@ -15,6 +15,13 @@
       "when": 1782364822181,
       "tag": "0001_public_black_knight",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1782366855609,
+      "tag": "0002_faulty_captain_midlands",
+      "breakpoints": true
     }
   ]
 }

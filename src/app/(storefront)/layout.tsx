@@ -31,7 +31,14 @@ export default async function StorefrontLayout({ children }: { children: React.R
           )}
           {tenant?.displayName ?? "RenovateConnect"}
         </Link>
-        <span className="text-sm opacity-90">Parts · Delivery · Install · Haulaway</span>
+        <div className="flex items-center gap-4">
+          <span className="hidden text-sm opacity-90 sm:inline">Parts · Delivery · Install · Haulaway</span>
+          {tenant && (
+            <Link href="/cart" className="text-sm font-medium underline-offset-2 hover:underline">
+              Cart
+            </Link>
+          )}
+        </div>
       </header>
 
       <main className="flex-1">{children}</main>

@@ -64,6 +64,16 @@ Full contract: see `docs/BUILD_SPEC.md`.
   `curl -H "Host: acme.localhost:3000"`. Demo tenants: `acme` (all verticals), `northgate`
   (toilets only), apex = platform landing.
 - `npm run db:setup && npm run db:migrate && npm run db:seed` to (re)build local data.
+- **Payments (M4)**: `src/server/payments.ts` abstracts charges. `selectProvider(tenant)` returns
+  `stripe` only when `STRIPE_SECRET_KEY` AND the tenant has a connected account; otherwise
+  `mock` (records a successful charge so the full booking flow works offline). Stripe Connect
+  destination charges, the webhook (`/api/stripe/webhook`, signature-verified), and Connect
+  onboarding (`startConnectOnboarding`) are wired but inactive until keys are set.
+- **Cart**: httpOnly `rc_cart` cookie → tenant-scoped `carts`/`cart_items`; quote snapshots are
+  RE-PRICED on cart load and at checkout (`loadCartForToken`). Checkout core =
+  `placeOrderForTenant` (deposit-at-booking, balance-on-completion).
+- Pattern: keep request-context-free cores (`*-core.ts`, server-only) testable; thin `"use server"`
+  wrappers handle cookies/host/redirect.
 
 ## Definition of done (every PR)
 - Typechecks, lints, builds. RLS verified for any new tenant-scoped table.

@@ -1,7 +1,9 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { quoteJob, type QuoteResult } from "@/server/quote";
+import { addToCart } from "@/server/cart";
 import { formatCents } from "@/lib/format";
 import type { PricedVariant } from "@/server/storefront";
 
@@ -29,6 +31,9 @@ export function Configurator({
   const [units, setUnits] = useState(1);
   const [result, setResult] = useState<QuoteResult | null>(null);
   const [pending, startTransition] = useTransition();
+  const [adding, startAdding] = useTransition();
+  const [addError, setAddError] = useState<string | null>(null);
+  const router = useRouter();
 
   const quantity = isArea ? Math.max(0, Math.round(length * width)) : Math.max(0, Math.round(units));
   const selected = variants.find((v) => v.id === variantId);
@@ -40,9 +45,22 @@ export function Configurator({
 
   function onSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setAddError(null);
     startTransition(async () => {
       const r = await quoteJob({ variantId, zip, quantity });
       setResult(r);
+    });
+  }
+
+  function onAddToCart() {
+    setAddError(null);
+    startAdding(async () => {
+      const r = await addToCart({ variantId, zip, quantity });
+      if (!r.ok) {
+        setAddError(r.error ?? "Could not add to cart");
+        return;
+      }
+      router.push("/cart");
     });
   }
 
@@ -142,6 +160,25 @@ export function Configurator({
         )}
         {result && result.ok && <QuoteBreakdown result={result} />}
       </div>
+
+      {result && result.ok && (
+        <div className="space-y-2">
+          {addError && (
+            <p className="rounded-lg border border-red-300 bg-red-50 px-4 py-2 text-sm text-red-700">
+              {addError}
+            </p>
+          )}
+          <button
+            type="button"
+            onClick={onAddToCart}
+            disabled={adding}
+            className="w-full rounded-lg border-2 px-6 py-3 font-medium disabled:opacity-50"
+            style={{ borderColor: "var(--brand-primary)", color: "var(--brand-primary)" }}
+          >
+            {adding ? "Adding…" : "Add to cart"}
+          </button>
+        </div>
+      )}
     </form>
   );
 }
@@ -172,14 +209,6 @@ function QuoteBreakdown({ result }: { result: Extract<QuoteResult, { ok: true }>
         Estimated lead time: {result.leadTimeDays} days
         {q.needsQuote ? " · final install price confirmed after a site visit" : ""}
       </p>
-      <button
-        type="button"
-        disabled
-        title="Cart & checkout arrive in M4"
-        className="mt-4 w-full cursor-not-allowed rounded-lg bg-slate-300 px-6 py-3 font-medium text-slate-600"
-      >
-        Book this job (cart coming in M4)
-      </button>
     </div>
   );
 }

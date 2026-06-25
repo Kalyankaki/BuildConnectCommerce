@@ -64,6 +64,7 @@ export const appointmentStatus = pgEnum("appointment_status", [
   "completed",
   "canceled",
 ]);
+export const cartStatus = pgEnum("cart_status", ["active", "converted", "abandoned"]);
 
 /* ───────────────────────── Shared column helpers ────────────────────── */
 
@@ -268,7 +269,12 @@ export const orders = pgTable(
     balanceCents: integer("balance_cents").default(0).notNull(),
     depositPaid: boolean("deposit_paid").default(false).notNull(),
     balancePaid: boolean("balance_paid").default(false).notNull(),
+    platformMarginCents: integer("platform_margin_cents").default(0).notNull(),
     currency: text("currency").default("usd").notNull(),
+    // Payment bookkeeping (provider = "mock" until Stripe keys are configured).
+    paymentProvider: text("payment_provider"),
+    depositPaymentRef: text("deposit_payment_ref"),
+    balancePaymentRef: text("balance_payment_ref"),
     createdAt,
     updatedAt,
   },
@@ -315,6 +321,47 @@ export const appointments = pgTable(
     windowStart: timestamp("window_start", { withTimezone: true }),
     windowEnd: timestamp("window_end", { withTimezone: true }),
     status: appointmentStatus("status").default("pending").notNull(),
+    createdAt,
+  },
+  () => [tenantIsolation],
+);
+
+/** A shopping cart, keyed by an anonymous session token (cookie). */
+export const carts = pgTable(
+  "carts",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => tenants.id, { onDelete: "cascade" }),
+    sessionToken: text("session_token").notNull(),
+    customerEmail: text("customer_email"),
+    status: cartStatus("status").default("active").notNull(),
+    createdAt,
+    updatedAt,
+  },
+  () => [tenantIsolation],
+);
+
+/** A configured bundle line in a cart, carrying the inputs + a priced quote snapshot. */
+export const cartItems = pgTable(
+  "cart_items",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => tenants.id, { onDelete: "cascade" }),
+    cartId: uuid("cart_id")
+      .notNull()
+      .references(() => carts.id, { onDelete: "cascade" }),
+    variantId: uuid("variant_id")
+      .notNull()
+      .references(() => productVariants.id, { onDelete: "cascade" }),
+    qty: integer("qty").default(1).notNull(),
+    zip: text("zip").notNull(),
+    configuratorInputs: jsonb("configurator_inputs").$type<Record<string, unknown>>(),
+    // Snapshot of the JobQuote computed when the item was added (re-priced on load/checkout).
+    quoteSnapshot: jsonb("quote_snapshot").$type<Record<string, unknown>>().notNull(),
     createdAt,
   },
   () => [tenantIsolation],
