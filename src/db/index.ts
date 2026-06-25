@@ -31,10 +31,14 @@ const globalForDb = globalThis as unknown as {
   __appClient?: ReturnType<typeof postgres>;
 };
 
+// `prepare: false` is required when connecting through a transaction pooler (Supabase
+// pooler / PgBouncer, Neon pooled) — common on serverless hosts like Vercel. Harmless locally.
+const clientOptions = { max: 5, prepare: false } as const;
+
 const adminClient =
-  globalForDb.__adminClient ?? postgres(required("DATABASE_URL"), { max: 5 });
+  globalForDb.__adminClient ?? postgres(required("DATABASE_URL"), clientOptions);
 const appClient =
-  globalForDb.__appClient ?? postgres(required("APP_DATABASE_URL"), { max: 10 });
+  globalForDb.__appClient ?? postgres(required("APP_DATABASE_URL"), clientOptions);
 
 if (process.env.NODE_ENV !== "production") {
   globalForDb.__adminClient = adminClient;
