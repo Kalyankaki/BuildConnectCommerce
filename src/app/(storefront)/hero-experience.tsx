@@ -6,10 +6,10 @@
  *
  * Code-built (primitive geometry, stylized) — browser-only mount with a glow fallback.
  */
-import { useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Canvas, type ThreeEvent } from "@react-three/fiber";
-import { CameraControls, ContactShadows, Float } from "@react-three/drei";
+import { CameraControls, ContactShadows, Environment, Float } from "@react-three/drei";
 import { ArrowRight, Hammer, Move3d, X } from "lucide-react";
 
 type ItemKey = "floor" | "island" | "sofa" | "panel" | "blinds";
@@ -67,7 +67,7 @@ function Room({ onSelect }: { onSelect: (k: ItemKey) => void }) {
       <Clickable onPick={() => onSelect("floor")}>
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
           <planeGeometry args={[8, 8]} />
-          <meshStandardMaterial color="#b98a52" roughness={0.55} metalness={0.05} />
+          <meshStandardMaterial color="#b98a52" roughness={0.4} metalness={0.15} />
         </mesh>
       </Clickable>
 
@@ -170,7 +170,7 @@ function Room({ onSelect }: { onSelect: (k: ItemKey) => void }) {
           </mesh>
           <mesh position={[0, 1.03, 0]} castShadow>
             <boxGeometry args={[1.25, 0.1, 1.95]} />
-            <meshStandardMaterial color="#f3f1ec" roughness={0.25} metalness={0.05} />
+            <meshStandardMaterial color="#f3f1ec" roughness={0.18} metalness={0.5} />
           </mesh>
         </group>
       </Clickable>
@@ -216,14 +216,18 @@ export function HeroExperience() {
 
       {mounted && (
         <Canvas shadows dpr={[1, 1.6]} camera={{ position: [HERO_CAM[0], HERO_CAM[1], HERO_CAM[2]], fov: 40 }} gl={{ antialias: true, alpha: true }}>
-          <ambientLight intensity={0.55} />
-          <directionalLight position={[6, 8, 5]} intensity={2.1} color="#fff4dc" castShadow shadow-mapSize={[1024, 1024]} />
-          <pointLight position={[-4, 3, 2]} intensity={30} color="#f59e0b" />
-          <pointLight position={[3, 2, 3]} intensity={14} color="#fb7185" />
-          <Float speed={0.6} rotationIntensity={0} floatIntensity={0.25} enabled={!explore}>
-            <Room onSelect={pick} />
-          </Float>
-          <ContactShadows position={[0, 0.01, 0]} opacity={0.4} scale={12} blur={2.4} far={4} />
+          <Suspense fallback={null}>
+            {/* Studio HDRI lights + reflects the scene (luxe product-render look) */}
+            <Environment files="/hdri/studio.exr" environmentIntensity={0.55} />
+            <ambientLight intensity={0.2} />
+            <directionalLight position={[6, 8, 5]} intensity={1.6} color="#fff4dc" castShadow shadow-mapSize={[1024, 1024]} />
+            <pointLight position={[-4, 3, 2]} intensity={22} color="#f59e0b" />
+            <pointLight position={[3, 2, 3]} intensity={10} color="#fb7185" />
+            <Float speed={0.6} rotationIntensity={0} floatIntensity={0.25} enabled={!explore}>
+              <Room onSelect={pick} />
+            </Float>
+            <ContactShadows position={[0, 0.01, 0]} opacity={0.4} scale={12} blur={2.4} far={4} />
+          </Suspense>
           <CameraControls ref={camRef} enabled={explore} minPolarAngle={0.4} maxPolarAngle={Math.PI / 2.05} />
         </Canvas>
       )}
