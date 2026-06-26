@@ -16,6 +16,7 @@ import {
 import { getCurrentTenant } from "@/server/tenant";
 import { getEnabledVerticals } from "@/server/storefront";
 import { HeroExperience } from "./hero-experience";
+import { CountUp, Reveal } from "@/components/motion-ui";
 
 export default async function HomePage() {
   const tenant = await getCurrentTenant();
@@ -49,69 +50,111 @@ function MarketingLanding() {
       {/* Bundle strip */}
       <section className="border-y border-slate-200 bg-white">
         <div className="mx-auto grid max-w-6xl grid-cols-2 divide-slate-100 sm:grid-cols-4 sm:divide-x">
-          {BUNDLE.map(({ icon: Icon, label }) => (
-            <div key={label} className="flex items-center justify-center gap-2.5 px-4 py-6 text-slate-800">
-              <Icon className="h-5 w-5 text-amber-500" />
-              <span className="text-sm font-semibold">{label}</span>
-            </div>
+          {BUNDLE.map(({ icon: Icon, label }, i) => (
+            <Reveal key={label} delay={i * 0.08}>
+              <div className="flex items-center justify-center gap-2.5 px-4 py-6 text-slate-800">
+                <Icon className="h-5 w-5 text-amber-500" />
+                <span className="text-sm font-semibold">{label}</span>
+              </div>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      {/* Stats band */}
+      <section className="bg-slate-950 text-white">
+        <div className="mx-auto grid max-w-6xl gap-10 px-4 py-16 sm:grid-cols-3 sm:px-6">
+          {[
+            { value: <CountUp to={4} suffix="-in-1" />, label: "Parts, delivery, install & haulaway — one job, one price." },
+            { value: <CountUp to={100} suffix="%" />, label: "Transparent, itemized pricing. No surprises at the door." },
+            { value: "Minutes", label: "From sign-up to a live, fully-branded storefront." },
+          ].map((s, i) => (
+            <Reveal key={i} delay={i * 0.12}>
+              <div className="text-center sm:text-left">
+                <div className="font-serif text-5xl font-semibold text-amber-400">{s.value}</div>
+                <p className="mt-3 text-sm leading-relaxed text-slate-400">{s.label}</p>
+              </div>
+            </Reveal>
           ))}
         </div>
       </section>
 
       {/* How it works */}
       <section id="how" className="mx-auto max-w-6xl px-4 py-24 sm:px-6">
-        <h2 className="font-serif text-4xl font-semibold tracking-tight sm:text-5xl">How it works</h2>
-        <div className="mt-10 grid gap-6 md:grid-cols-3">
+        <Reveal>
+          <p className="text-xs font-semibold uppercase tracking-[0.25em] text-amber-600">The platform</p>
+          <h2 className="font-serif mt-3 text-4xl font-semibold tracking-tight sm:text-5xl">
+            From storefront to installed,
+            <span className="block italic text-slate-500">in three moves.</span>
+          </h2>
+        </Reveal>
+        <div className="mt-12 grid gap-6 md:grid-cols-3">
           {[
-            { icon: Store, title: "Spin up your storefront", body: "Pick your verticals, set your markup, add your brand. Your subdomain goes live instantly." },
-            { icon: ClipboardCheck, title: "Customers configure the job", body: "Homeowners size the job, get a transparent installed-price quote, and book with a deposit." },
-            { icon: ShieldCheck, title: "We handle fulfillment", body: "Delivery, professional install, and haulaway are scheduled and tracked to completion." },
+            { icon: Store, title: "Launch your storefront", body: "Choose your verticals, set your markup, drop in your brand. Your subdomain is live in minutes." },
+            { icon: ClipboardCheck, title: "Customers configure the job", body: "Homeowners size the work, get a transparent installed-price quote, and book with a deposit." },
+            { icon: ShieldCheck, title: "We deliver the craft", body: "Delivery, master-craftsman install, and old-fixture haulaway — scheduled and tracked to done." },
           ].map(({ icon: Icon, title, body }, i) => (
-            <div key={title} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-900 text-white">
-                <Icon className="h-5 w-5" />
+            <Reveal key={title} delay={i * 0.1}>
+              <div className="h-full rounded-2xl border border-slate-200 bg-white p-7 shadow-sm transition hover:-translate-y-1 hover:shadow-xl">
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-slate-900 text-white">
+                  <Icon className="h-5 w-5" />
+                </div>
+                <div className="mt-5 text-xs font-semibold uppercase tracking-wide text-amber-600">Step {i + 1}</div>
+                <h3 className="mt-1 font-display text-xl font-semibold">{title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-slate-600">{body}</p>
               </div>
-              <div className="mt-4 text-xs font-semibold uppercase tracking-wide text-amber-600">Step {i + 1}</div>
-              <h3 className="mt-1 font-display text-lg font-semibold">{title}</h3>
-              <p className="mt-2 text-sm text-slate-600">{body}</p>
-            </div>
+            </Reveal>
           ))}
         </div>
       </section>
 
-      {/* What we install */}
+      {/* What you can sell */}
       <section id="verticals" className="border-y border-slate-200 bg-slate-50">
-        <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
-          <h2 className="font-serif text-4xl font-semibold tracking-tight sm:text-5xl">What you can sell</h2>
-          <p className="mt-3 max-w-xl text-slate-600">
-            Configurable verticals for the renovations homeowners actually buy — each sold as a
-            complete, installed bundle.
-          </p>
-          <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            {SHOWCASE.map(({ icon: Icon, name, note }) => (
-              <div key={name} className="rounded-2xl border border-slate-200 bg-white p-6">
-                <Icon className="h-7 w-7 text-slate-900" />
-                <h3 className="mt-4 font-semibold">{name}</h3>
-                <p className="mt-1 text-sm text-slate-500">{note}</p>
-              </div>
+        <div className="mx-auto max-w-6xl px-4 py-24 sm:px-6">
+          <Reveal>
+            <p className="text-xs font-semibold uppercase tracking-[0.25em] text-amber-600">The catalog</p>
+            <h2 className="font-serif mt-3 text-4xl font-semibold tracking-tight sm:text-5xl">
+              Built for the renovations people actually buy.
+            </h2>
+            <p className="mt-4 max-w-xl text-slate-600">
+              Every vertical is sold as a complete, installed bundle — configured, quoted, and
+              fulfilled end to end.
+            </p>
+          </Reveal>
+          <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            {SHOWCASE.map(({ icon: Icon, name, note }, i) => (
+              <Reveal key={name} delay={i * 0.08}>
+                <div className="h-full rounded-2xl border border-slate-200 bg-white p-7 transition hover:-translate-y-1 hover:border-amber-300 hover:shadow-lg">
+                  <Icon className="h-8 w-8 text-slate-900" />
+                  <h3 className="mt-5 font-display text-lg font-semibold">{name}</h3>
+                  <p className="mt-1 text-sm text-slate-500">{note}</p>
+                </div>
+              </Reveal>
             ))}
           </div>
         </div>
       </section>
 
       {/* CTA */}
-      <section className="bg-amber-500">
-        <div className="mx-auto flex max-w-6xl flex-col items-start justify-between gap-6 px-4 py-14 sm:px-6 md:flex-row md:items-center">
-          <div>
-            <h2 className="font-serif text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl">Ready to launch?</h2>
-            <p className="mt-2 text-slate-900/80">Your branded, full-service storefront in minutes.</p>
-          </div>
-          <Link
-            href="/onboarding"
-            className="inline-flex items-center gap-2 rounded-lg bg-slate-950 px-6 py-3 font-semibold text-white transition hover:bg-slate-800"
-          >
-            Start your storefront <ArrowRight className="h-4 w-4" />
-          </Link>
+      <section className="relative overflow-hidden bg-amber-500">
+        <div className="pointer-events-none absolute inset-0 opacity-30" style={{ background: "radial-gradient(40% 80% at 90% 50%, #ffffff 0%, transparent 70%)" }} />
+        <div className="relative mx-auto flex max-w-6xl flex-col items-start justify-between gap-8 px-4 py-20 sm:px-6 md:flex-row md:items-center">
+          <Reveal>
+            <h2 className="font-serif text-4xl font-semibold tracking-tight text-slate-950 sm:text-6xl">
+              Build your renovation brand.
+            </h2>
+            <p className="mt-3 max-w-md text-lg text-slate-900/80">
+              A branded, full-service storefront — live in minutes, fulfilled end to end.
+            </p>
+          </Reveal>
+          <Reveal delay={0.1}>
+            <Link
+              href="/onboarding"
+              className="inline-flex items-center gap-2 rounded-full bg-slate-950 px-8 py-4 font-semibold text-white shadow-xl transition hover:bg-slate-800"
+            >
+              Start your storefront <ArrowRight className="h-4 w-4" />
+            </Link>
+          </Reveal>
         </div>
       </section>
     </>
