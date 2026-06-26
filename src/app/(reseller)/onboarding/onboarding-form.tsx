@@ -17,18 +17,22 @@ export function OnboardingForm({
   const [state, formAction, isPending] = useActionState(provisionTenant, initialState);
 
   if (state.ok && state.slug) {
-    const url = `http://${state.slug}.${rootDomain}`;
     return (
       <div className="mt-8 rounded-xl border border-green-300 bg-green-50 p-6">
         <h2 className="text-lg font-semibold text-green-900">Your storefront is live 🎉</h2>
-        <p className="mt-2 text-green-800">
-          Visit{" "}
-          <a className="font-medium underline" href={url}>
-            {state.slug}.{rootDomain}
-          </a>
+        <a
+          href={`/preview/${state.slug}`}
+          className="mt-4 inline-flex items-center gap-2 rounded-lg bg-green-700 px-5 py-2.5 font-medium text-white hover:bg-green-600"
+        >
+          Visit your storefront →
+        </a>
+        <p className="mt-3 text-sm text-green-800">
+          Production URL (once you connect a custom domain):{" "}
+          <span className="font-medium">{state.slug}.{rootDomain}</span>
         </p>
-        <p className="mt-2 text-sm text-green-700">
-          (Next step in M4: connect Stripe to start collecting payouts.)
+        <p className="mt-1 text-xs text-green-700">
+          On {rootDomain.includes("vercel.app") ? "Vercel's free domain" : "this domain"}, subdomains
+          aren&apos;t available — the button above previews your store on the main domain.
         </p>
       </div>
     );
