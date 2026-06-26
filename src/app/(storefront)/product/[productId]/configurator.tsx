@@ -21,10 +21,12 @@ export function Configurator({
   variants,
   configuratorType,
   coverageZips,
+  base = "",
 }: {
   variants: PricedVariant[];
   configuratorType: ConfiguratorType;
   coverageZips: string[];
+  base?: string;
 }) {
   const isArea = configuratorType === "area";
   const [variantId, setVariantId] = useState(variants[0]?.id ?? "");
@@ -53,7 +55,7 @@ export function Configurator({
     startAdding(async () => {
       const r = await addToCart({ variantId, zip, quantity });
       if (!r.ok) return setAddError(r.error ?? "Could not add to cart");
-      router.push("/cart");
+      router.push(`${base}/cart`);
     });
   }
 

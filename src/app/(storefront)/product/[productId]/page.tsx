@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ChevronRight, FileText, Hammer, Package, Truck, Trash2 } from "lucide-react";
-import { getCurrentTenant } from "@/server/tenant";
+import { getCurrentTenant, getStoreBase } from "@/server/tenant";
 import { getStorefrontProduct } from "@/server/storefront";
 import { Configurator } from "./configurator";
 
@@ -10,6 +10,7 @@ export default async function ProductPage({ params }: { params: Promise<{ produc
   const tenant = await getCurrentTenant();
   if (!tenant) notFound();
 
+  const base = await getStoreBase();
   const data = await getStorefrontProduct(tenant, productId);
   if (!data || data.variants.length === 0) notFound();
   const { product, vertical, variants } = data;
@@ -17,9 +18,9 @@ export default async function ProductPage({ params }: { params: Promise<{ produc
   return (
     <section className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
       <nav aria-label="Breadcrumb" className="flex items-center gap-1 text-sm text-slate-500">
-        <Link href="/" className="hover:text-slate-900">Home</Link>
+        <Link href={`${base}/`} className="hover:text-slate-900">Home</Link>
         <ChevronRight className="h-4 w-4" />
-        <Link href={`/shop/${vertical.slug}`} className="hover:text-slate-900">{vertical.name}</Link>
+        <Link href={`${base}/shop/${vertical.slug}`} className="hover:text-slate-900">{vertical.name}</Link>
         <ChevronRight className="h-4 w-4" />
         <span className="text-slate-900">{product.name}</span>
       </nav>
@@ -62,6 +63,7 @@ export default async function ProductPage({ params }: { params: Promise<{ produc
             variants={variants}
             configuratorType={vertical.configuratorType}
             coverageZips={tenant.coverageZips}
+            base={base}
           />
         </div>
       </div>

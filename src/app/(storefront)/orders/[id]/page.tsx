@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getCurrentTenant } from "@/server/tenant";
+import { getCurrentTenant, getStoreBase } from "@/server/tenant";
 import { getOrderTrackingForTenant } from "@/server/order-core";
 import { formatCents } from "@/lib/format";
 
@@ -19,6 +19,7 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
   const tenant = await getCurrentTenant();
   if (!tenant) notFound();
 
+  const base = await getStoreBase();
   const data = await getOrderTrackingForTenant(tenant, id);
   if (!data) notFound();
   const { order, items, appointments, events } = data;
@@ -106,7 +107,7 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
       </dl>
 
       <p className="mt-4 text-xs text-slate-400">{items.length} item(s) in this order.</p>
-      <Link href="/" className="mt-6 inline-block underline">
+      <Link href={`${base}/`} className="mt-6 inline-block underline">
         ← Back to {tenant.displayName}
       </Link>
     </section>

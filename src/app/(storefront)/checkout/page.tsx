@@ -1,5 +1,5 @@
 import { notFound, redirect } from "next/navigation";
-import { getCurrentTenant } from "@/server/tenant";
+import { getCurrentTenant, getStoreBase } from "@/server/tenant";
 import { getCartToken } from "@/server/cart-cookie";
 import { loadCartForToken } from "@/server/cart-core";
 import { formatCents } from "@/lib/format";
@@ -11,9 +11,10 @@ export default async function CheckoutPage() {
   const tenant = await getCurrentTenant();
   if (!tenant) notFound();
 
+  const base = await getStoreBase();
   const token = await getCartToken();
   const cart = await loadCartForToken(tenant, token);
-  if (!cart || cart.lines.length === 0) redirect("/cart");
+  if (!cart || cart.lines.length === 0) redirect(`${base}/cart`);
 
   const depositPct = tenant.depositPercent ?? Number(process.env.DEFAULT_DEPOSIT_PERCENT ?? 50);
   const depositCents = Math.round((cart.totals.totalCents * depositPct) / 100);

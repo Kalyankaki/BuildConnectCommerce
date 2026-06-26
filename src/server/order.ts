@@ -7,7 +7,7 @@ import { z } from "zod";
 import { redirect } from "next/navigation";
 import { placeOrderForTenant } from "@/server/order-core";
 import { getCartToken } from "@/server/cart-cookie";
-import { getCurrentTenant } from "@/server/tenant";
+import { getCurrentTenant, getStoreBase } from "@/server/tenant";
 
 export type CheckoutState = { ok: boolean; error?: string };
 
@@ -45,5 +45,6 @@ export async function placeOrder(_prev: CheckoutState, formData: FormData): Prom
   });
 
   if (!res.ok) return { ok: false, error: res.error };
-  redirect(`/orders/${res.orderId}`);
+  const base = await getStoreBase();
+  redirect(`${base}/orders/${res.orderId}`);
 }

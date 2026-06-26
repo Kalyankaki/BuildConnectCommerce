@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowRight, ChevronRight } from "lucide-react";
-import { getCurrentTenant } from "@/server/tenant";
+import { getCurrentTenant, getStoreBase } from "@/server/tenant";
 import { getStorefrontVertical } from "@/server/storefront";
 import { formatCents } from "@/lib/format";
 
@@ -10,6 +10,7 @@ export default async function VerticalPage({ params }: { params: Promise<{ verti
   const tenant = await getCurrentTenant();
   if (!tenant) notFound();
 
+  const base = await getStoreBase();
   const data = await getStorefrontVertical(tenant, slug);
   if (!data) notFound();
   const { vertical, products } = data;
@@ -17,7 +18,7 @@ export default async function VerticalPage({ params }: { params: Promise<{ verti
   return (
     <section className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
       <nav aria-label="Breadcrumb" className="flex items-center gap-1 text-sm text-slate-500">
-        <Link href="/" className="hover:text-slate-900">Home</Link>
+        <Link href={`${base}/`} className="hover:text-slate-900">Home</Link>
         <ChevronRight className="h-4 w-4" />
         <span className="text-slate-900">{vertical.name}</span>
       </nav>
@@ -42,7 +43,7 @@ export default async function VerticalPage({ params }: { params: Promise<{ verti
             return (
               <li key={p.id}>
                 <Link
-                  href={`/product/${p.id}`}
+                  href={`${base}/product/${p.id}`}
                   className="group flex h-full flex-col rounded-2xl border border-slate-200 bg-white p-6 transition hover:-translate-y-0.5 hover:shadow-lg"
                 >
                   <span className="font-display text-lg font-semibold">{p.name}</span>

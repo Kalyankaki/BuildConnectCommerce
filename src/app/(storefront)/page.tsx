@@ -13,7 +13,7 @@ import {
   Truck,
   Trash2,
 } from "lucide-react";
-import { getCurrentTenant } from "@/server/tenant";
+import { getCurrentTenant, getStoreBase } from "@/server/tenant";
 import { getEnabledVerticals } from "@/server/storefront";
 import { HeroExperience } from "./hero-experience";
 import { CountUp, Reveal } from "@/components/motion-ui";
@@ -165,6 +165,7 @@ function MarketingLanding() {
 
 async function TenantStorefront({ tenant }: { tenant: Awaited<ReturnType<typeof getCurrentTenant>> & object }) {
   const verticals = await getEnabledVerticals(tenant.id);
+  const base = await getStoreBase();
 
   return (
     <>
@@ -212,7 +213,7 @@ async function TenantStorefront({ tenant }: { tenant: Awaited<ReturnType<typeof 
             {verticals.map((v) => (
               <Link
                 key={v.id}
-                href={`/shop/${v.slug}`}
+                href={`${base}/shop/${v.slug}`}
                 className="group flex flex-col rounded-2xl border border-slate-200 bg-white p-6 transition hover:-translate-y-0.5 hover:shadow-lg"
               >
                 <span className="text-3xl" aria-hidden>{v.icon ?? "🔧"}</span>

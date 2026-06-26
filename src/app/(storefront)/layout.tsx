@@ -6,7 +6,7 @@ import type { CSSProperties } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Hammer, Phone, ShoppingCart } from "lucide-react";
-import { getCurrentTenant } from "@/server/tenant";
+import { getCurrentTenant, getStoreBase } from "@/server/tenant";
 
 export async function generateMetadata(): Promise<Metadata> {
   const tenant = await getCurrentTenant();
@@ -21,6 +21,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function StorefrontLayout({ children }: { children: React.ReactNode }) {
   const tenant = await getCurrentTenant();
+  const base = await getStoreBase();
 
   const brandVars = {
     "--brand-primary": tenant?.primaryColor ?? "#0f172a",
@@ -31,7 +32,7 @@ export default async function StorefrontLayout({ children }: { children: React.R
     <div style={brandVars} className="flex min-h-full flex-col">
       <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/85 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
-          <Link href="/" className="flex items-center gap-2.5">
+          <Link href={`${base}/`} className="flex items-center gap-2.5">
             <span
               className="flex h-9 w-9 items-center justify-center rounded-lg text-white"
               style={{ backgroundColor: tenant ? "var(--brand-primary)" : "#0f172a" }}
@@ -56,7 +57,7 @@ export default async function StorefrontLayout({ children }: { children: React.R
                 </a>
               )}
               <Link
-                href="/cart"
+                href={`${base}/cart`}
                 className="flex items-center gap-2 rounded-lg border border-slate-300 px-3.5 py-2 text-sm font-medium hover:border-slate-400 hover:bg-slate-50"
               >
                 <ShoppingCart className="h-4 w-4" /> Cart

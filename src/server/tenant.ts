@@ -17,6 +17,16 @@ export type Tenant = typeof tenants.$inferSelect;
 
 export const PREVIEW_COOKIE = "rc_preview_tenant";
 
+/**
+ * URL prefix for storefront links. "/store/<slug>" under path-based hosting, "" under
+ * host-based (subdomain/custom domain). Storefront links prepend this so navigation stays
+ * within the tenant.
+ */
+export async function getStoreBase(): Promise<string> {
+  const h = await headers();
+  return h.get("x-tenant-base") ?? "";
+}
+
 export const getCurrentTenant = cache(async (): Promise<Tenant | null> => {
   const h = await headers();
   const subdomain = h.get("x-tenant-subdomain");

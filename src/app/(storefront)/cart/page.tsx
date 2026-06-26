@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowRight, ShoppingCart, Trash2 } from "lucide-react";
-import { getCurrentTenant } from "@/server/tenant";
+import { getCurrentTenant, getStoreBase } from "@/server/tenant";
 import { getCartToken } from "@/server/cart-cookie";
 import { loadCartForToken } from "@/server/cart-core";
 import { removeCartItem } from "@/server/cart";
@@ -12,6 +12,7 @@ export const metadata = { title: "Your cart" };
 export default async function CartPage() {
   const tenant = await getCurrentTenant();
   if (!tenant) notFound();
+  const base = await getStoreBase();
 
   const token = await getCartToken();
   const cart = await loadCartForToken(tenant, token);
@@ -23,7 +24,7 @@ export default async function CartPage() {
           <ShoppingCart className="h-6 w-6 text-slate-400" />
         </div>
         <h1 className="font-display mt-4 text-2xl font-bold">Your cart is empty</h1>
-        <Link href="/" className="mt-4 inline-flex items-center gap-1.5 font-medium" style={{ color: "var(--brand-primary)" }}>
+        <Link href={`${base}/`} className="mt-4 inline-flex items-center gap-1.5 font-medium" style={{ color: "var(--brand-primary)" }}>
           Browse {tenant.displayName} <ArrowRight className="h-4 w-4" />
         </Link>
       </section>
@@ -85,7 +86,7 @@ export default async function CartPage() {
             </div>
           </dl>
           <Link
-            href="/checkout"
+            href={`${base}/checkout`}
             className="mt-5 flex items-center justify-center gap-2 rounded-lg px-6 py-3 font-semibold text-white transition"
             style={{ backgroundColor: "var(--brand-primary)" }}
           >
