@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { adminDb } from "@/db";
 import { verticals } from "@/db/schema";
 import { getSession, isAuthConfigured } from "@/server/auth";
+import { ensureSampleCatalog } from "@/server/bootstrap";
 import { OnboardingForm } from "./onboarding-form";
 
 export const metadata = { title: "Create your storefront — RenovateConnect" };
@@ -15,6 +16,8 @@ export const dynamic = "force-dynamic";
 
 export default async function OnboardingPage() {
   if (isAuthConfigured() && !(await getSession())) redirect("/login?next=/onboarding");
+
+  await ensureSampleCatalog(); // populate a sample catalog if the DB is empty
 
   const available = await adminDb
     .select({ slug: verticals.slug, name: verticals.name, icon: verticals.icon })
