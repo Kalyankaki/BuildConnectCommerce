@@ -21,8 +21,14 @@ export interface Session {
   tenantId?: string | null;
 }
 
+/** True only when Supabase Auth env is configured. */
+export function isAuthConfigured(): boolean {
+  return Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+}
+
 /** The signed-in profile (creating the profile row on first login), or null. */
 export async function getSession(): Promise<Session | null> {
+  if (!isAuthConfigured()) return null; // no Supabase yet → treated as signed-out (no 500)
   const supabase = await createSupabaseServerClient();
   const {
     data: { user },

@@ -8,6 +8,11 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export type AuthState = { error?: string; message?: string };
 
+function authConfigured(): boolean {
+  return Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+}
+const NOT_CONFIGURED = "Authentication isn't configured yet — add your Supabase keys to .env.local (and Vercel).";
+
 const credsSchema = z.object({
   email: z.string().email("Enter a valid email"),
   password: z.string().min(6, "Password must be at least 6 characters"),
@@ -21,6 +26,7 @@ export async function signInWithPassword(_prev: AuthState, formData: FormData): 
     redirectTo: String(formData.get("redirectTo") ?? "/"),
   });
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
+  if (!authConfigured()) return { error: NOT_CONFIGURED };
 
   const supabase = await createSupabaseServerClient();
   const { error } = await supabase.auth.signInWithPassword({
@@ -42,6 +48,7 @@ export async function signUp(_prev: AuthState, formData: FormData): Promise<Auth
       redirectTo: String(formData.get("redirectTo") ?? "/"),
     });
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
+  if (!authConfigured()) return { error: NOT_CONFIGURED };
 
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase.auth.signUp({
@@ -59,7 +66,9 @@ export async function signUp(_prev: AuthState, formData: FormData): Promise<Auth
 }
 
 export async function signOut(): Promise<void> {
-  const supabase = await createSupabaseServerClient();
-  await supabase.auth.signOut();
+  if (authConfigured()) {
+    const supabase = await createSupabaseServerClient();
+    await supabase.auth.signOut();
+  }
   redirect("/login");
 }
