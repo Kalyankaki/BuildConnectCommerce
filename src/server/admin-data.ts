@@ -19,12 +19,16 @@ import {
   tenants,
   verticals,
 } from "@/db/schema";
-import { getAdminSession, type Session } from "@/server/auth";
+import { getAdminSession, isAuthConfigured, type Session } from "@/server/auth";
 
 export async function adminContextOrRedirect(): Promise<Session> {
   const session = await getAdminSession();
-  if (!session) redirect("/login?next=/admin");
-  return session;
+  if (session) return session;
+  // Demo mode: when Supabase auth isn't configured, allow admin access.
+  if (!isAuthConfigured()) {
+    return { profileId: "demo", email: "demo@local", isPlatformAdmin: true, role: "platform_admin", tenantId: null };
+  }
+  redirect("/login?next=/admin");
 }
 
 export async function listAdminProfiles() {

@@ -5,7 +5,7 @@
 import { redirect } from "next/navigation";
 import { adminDb } from "@/db";
 import { verticals } from "@/db/schema";
-import { getSession } from "@/server/auth";
+import { getSession, isAuthConfigured } from "@/server/auth";
 import { OnboardingForm } from "./onboarding-form";
 
 export const metadata = { title: "Create your storefront — RenovateConnect" };
@@ -14,8 +14,7 @@ export const metadata = { title: "Create your storefront — RenovateConnect" };
 export const dynamic = "force-dynamic";
 
 export default async function OnboardingPage() {
-  const session = await getSession();
-  if (!session) redirect("/login?next=/onboarding");
+  if (isAuthConfigured() && !(await getSession())) redirect("/login?next=/onboarding");
 
   const available = await adminDb
     .select({ slug: verticals.slug, name: verticals.name, icon: verticals.icon })

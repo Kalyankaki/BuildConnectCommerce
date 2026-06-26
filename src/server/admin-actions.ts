@@ -17,9 +17,10 @@ import {
   tenants,
   verticals,
 } from "@/db/schema";
-import { getAdminSession } from "@/server/auth";
+import { getAdminSession, isAuthConfigured } from "@/server/auth";
 
 async function requireAdmin() {
+  if (!isAuthConfigured()) return; // demo mode
   const session = await getAdminSession();
   if (!session) redirect("/login?next=/admin");
 }

@@ -7,12 +7,19 @@ import { desc, eq } from "drizzle-orm";
 import { notFound, redirect } from "next/navigation";
 import { withTenant } from "@/db";
 import { appointments, orders } from "@/db/schema";
-import { getInstallerSession, type Session } from "@/server/auth";
+import { getInstallerSession, isAuthConfigured, type Session } from "@/server/auth";
 import { getCurrentTenant, type Tenant } from "@/server/tenant";
 
 export async function installerContextOrRedirect(): Promise<{ tenant: Tenant; session: Session }> {
   const tenant = await getCurrentTenant();
   if (!tenant) notFound();
+  // Demo mode: when Supabase auth isn't configured, allow installer access.
+  if (!isAuthConfigured()) {
+    return {
+      tenant,
+      session: { profileId: "demo", email: "demo@local", isPlatformAdmin: false, role: "installer", tenantId: tenant.id },
+    };
+  }
   const session = await getInstallerSession(tenant.id);
   if (!session) redirect("/login?next=/installer");
   return { tenant, session };

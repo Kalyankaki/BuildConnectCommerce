@@ -5,7 +5,7 @@ import "server-only";
 import { cache } from "react";
 import { desc, eq } from "drizzle-orm";
 import { notFound, redirect } from "next/navigation";
-import { getResellerSession, type Session } from "@/server/auth";
+import { getResellerSession, isAuthConfigured, type Session } from "@/server/auth";
 import { getCurrentTenant } from "@/server/tenant";
 import { adminDb, withTenant } from "@/db";
 import {
@@ -140,6 +140,13 @@ export async function getRevenueSummary(tenant: Tenant): Promise<RevenueSummary>
 export async function resellerContextOrRedirect(): Promise<{ tenant: Tenant; session: Session }> {
   const tenant = await getCurrentTenant();
   if (!tenant) notFound();
+  // Demo mode: when Supabase auth isn't configured, allow access as the storefront owner.
+  if (!isAuthConfigured()) {
+    return {
+      tenant,
+      session: { profileId: "demo", email: "demo@local", isPlatformAdmin: true, role: "reseller_owner", tenantId: tenant.id },
+    };
+  }
   const session = await getResellerSession(tenant.id);
   if (!session) redirect("/login?next=/reseller");
   return { tenant, session };

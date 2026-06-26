@@ -19,7 +19,7 @@ import {
   tenants,
   verticals,
 } from "@/db/schema";
-import { getSession } from "@/server/auth";
+import { getSession, isAuthConfigured } from "@/server/auth";
 
 export type ProvisionState = { ok: boolean; error?: string; slug?: string };
 
@@ -62,7 +62,7 @@ export async function provisionTenant(
   const data = parsed.data;
 
   const session = await getSession();
-  if (!session) return { ok: false, error: "Please sign in to create a storefront." };
+  if (isAuthConfigured() && !session) return { ok: false, error: "Please sign in to create a storefront." };
 
   // Subdomain must be unique.
   const existing = await adminDb
@@ -98,11 +98,13 @@ export async function provisionTenant(
     .set({ defaultMarkupPolicyId: policy.id })
     .where(eq(tenants.id, tenant.id));
 
-  // The creator becomes the storefront owner.
-  await adminDb
-    .insert(memberships)
-    .values({ tenantId: tenant.id, userId: session.profileId, role: "reseller_owner" })
-    .onConflictDoNothing();
+  // The creator becomes the storefront owner (when signed in).
+  if (session) {
+    await adminDb
+      .insert(memberships)
+      .values({ tenantId: tenant.id, userId: session.profileId, role: "reseller_owner" })
+      .onConflictDoNothing();
+  }
 
   // Enable every variant in the chosen verticals.
   const variants = await adminDb

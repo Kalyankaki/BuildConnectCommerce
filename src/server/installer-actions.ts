@@ -9,13 +9,14 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { withTenant } from "@/db";
 import { appointments } from "@/db/schema";
-import { getInstallerSession } from "@/server/auth";
+import { getInstallerSession, isAuthConfigured } from "@/server/auth";
 import { transitionOrderForTenant } from "@/server/lifecycle-core";
 import { getCurrentTenant, type Tenant } from "@/server/tenant";
 
 async function requireInstaller(): Promise<{ tenant: Tenant; profileId: string }> {
   const tenant = await getCurrentTenant();
   if (!tenant) redirect("/login?next=/installer");
+  if (!isAuthConfigured()) return { tenant, profileId: "demo" };
   const session = await getInstallerSession(tenant.id);
   if (!session) redirect("/login?next=/installer");
   return { tenant, profileId: session.profileId };

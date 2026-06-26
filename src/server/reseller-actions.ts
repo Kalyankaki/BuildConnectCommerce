@@ -10,14 +10,16 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { adminDb, withTenant } from "@/db";
 import { markupPolicies, tenantCatalog, tenants } from "@/db/schema";
-import { getResellerSession } from "@/server/auth";
+import { getResellerSession, isAuthConfigured } from "@/server/auth";
 import { getCurrentTenant, type Tenant } from "@/server/tenant";
 
 async function requireReseller(): Promise<Tenant> {
   const tenant = await getCurrentTenant();
   if (!tenant) redirect("/login?next=/reseller");
-  const session = await getResellerSession(tenant.id);
-  if (!session) redirect("/login?next=/reseller");
+  if (isAuthConfigured()) {
+    const session = await getResellerSession(tenant.id);
+    if (!session) redirect("/login?next=/reseller");
+  }
   return tenant;
 }
 
