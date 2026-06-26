@@ -141,7 +141,7 @@ export async function resellerContextOrRedirect(): Promise<{ tenant: Tenant; ses
   const tenant = await getCurrentTenant();
   if (!tenant) notFound();
   const session = await getResellerSession(tenant.id);
-  if (!session) redirect("/reseller/login");
+  if (!session) redirect("/login?next=/reseller");
   return { tenant, session };
 }
 

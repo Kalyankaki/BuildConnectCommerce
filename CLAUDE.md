@@ -79,10 +79,14 @@ Full contract: see `docs/BUILD_SPEC.md`.
   `scheduling-core.ts` (installer = membership role `installer` + `coverageZips`; `DAILY_CAPACITY`).
   Notifications: `notifications.ts` (mock logs; Resend email / Twilio SMS behind env keys, via fetch).
   Customer tracking page = `/orders/[id]` (progress + appointments + timeline).
-- **Auth (M6, DEV SHIM)**: `auth.ts` signs an HMAC session cookie (`rc_session`) carrying
-  profile+tenant+role. `getResellerSession(tenantId)` gates the reseller dashboard.
-  `TODO(M9/prod): replace with Supabase Auth`. Dev sign-in at `/reseller/login` lists seeded
-  reseller owners. `scripts/dev-token.ts` mints a session cookie for curl/testing.
+- **Auth (Supabase Auth)**: `src/lib/supabase/{server,client}.ts` + session refresh in `proxy.ts`.
+  Identity rule: `profiles.id === supabase auth user id` (profile row ensured on first login).
+  `auth.ts` `getSession()` returns the profile; `getResellerSession`/`getAdminSession`/
+  `getInstallerSession` add role/tenant from `memberships` (or `profiles.is_platform_admin`).
+  Sign in/up at `/login` + `/signup` (`auth-actions.ts`); gated routes redirect to
+  `/login?next=…`. Onboarding requires a session and makes the creator `reseller_owner`.
+  Seed creates matching Auth users (password `renovate123`) when Supabase env is set.
+  Needs `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`.
 - **Reseller dashboard** lives at real path `/reseller/*` (NOT a route group) on the tenant host:
   overview, catalog & markup, orders kanban + detail (schedule/advance via `order-actions`),
   branding editor (live preview), payouts, custom domain. Reads = `reseller-data.ts`,

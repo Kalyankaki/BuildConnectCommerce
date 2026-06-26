@@ -21,7 +21,7 @@ import { getAdminSession } from "@/server/auth";
 
 async function requireAdmin() {
   const session = await getAdminSession();
-  if (!session) redirect("/admin/login");
+  if (!session) redirect("/login?next=/admin");
 }
 
 const cents = z.coerce.number().int().nonnegative();

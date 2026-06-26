@@ -23,7 +23,7 @@ import { getAdminSession, type Session } from "@/server/auth";
 
 export async function adminContextOrRedirect(): Promise<Session> {
   const session = await getAdminSession();
-  if (!session) redirect("/admin/login");
+  if (!session) redirect("/login?next=/admin");
   return session;
 }
 

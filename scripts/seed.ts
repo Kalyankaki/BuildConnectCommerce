@@ -28,6 +28,36 @@ import {
   verticals,
 } from "../src/db/schema";
 import { computeJobQuote, customerUnitPrice, resolveMarkupBps } from "../src/lib/pricing";
+import { createClient } from "@supabase/supabase-js";
+
+// If Supabase is configured, create matching Auth users so the demo accounts can log in.
+// Profile rows are keyed by the auth user id (see src/server/auth.ts).
+const SB_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const SB_SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const sb =
+  SB_URL && SB_SERVICE
+    ? createClient(SB_URL, SB_SERVICE, { auth: { autoRefreshToken: false, persistSession: false } })
+    : null;
+export const DEMO_PASSWORD = "renovate123";
+
+async function ensureAuthUser(email: string): Promise<string | undefined> {
+  if (!sb) return undefined; // no Supabase configured → DB generates a random profile id
+  const created = await sb.auth.admin.createUser({ email, password: DEMO_PASSWORD, email_confirm: true });
+  if (created.data?.user) return created.data.user.id;
+  // Already exists — find it.
+  for (let page = 1; page <= 10; page++) {
+    const { data } = await sb.auth.admin.listUsers({ page, perPage: 200 });
+    const found = data?.users.find((u) => u.email?.toLowerCase() === email.toLowerCase());
+    if (found) return found.id;
+    if (!data || data.users.length < 200) break;
+  }
+  if (created.error) console.warn(`auth user ${email}: ${created.error.message}`);
+  return undefined;
+}
+
+function withId(id: string | undefined) {
+  return id ? { id } : {};
+}
 
 async function clearAll() {
   // FK-safe order (children first).
@@ -181,9 +211,10 @@ async function main() {
   console.log("✓ demo tenant 'northgate' (blue, toilets only)");
 
   // An installer for acme (so jobs can be scheduled/assigned).
+  const ivanId = await ensureAuthUser("ivan@acme.test");
   const [installer] = await adminDb
     .insert(profiles)
-    .values({ email: "ivan@acme.test", fullName: "Ivan Installer", phone: "+15555550100" })
+    .values({ ...withId(ivanId), email: "ivan@acme.test", fullName: "Ivan Installer", phone: "+15555550100" })
     .returning();
   await adminDb.insert(memberships).values({
     tenantId: acme.id,
@@ -194,11 +225,13 @@ async function main() {
   console.log("✓ installer 'Ivan' for acme");
 
   // Reseller owners (for dev sign-in to the dashboard).
+  const acmeOwnerId = await ensureAuthUser("owner@acme.test");
+  const ngOwnerId = await ensureAuthUser("owner@northgate.test");
   const owners = await adminDb
     .insert(profiles)
     .values([
-      { email: "owner@acme.test", fullName: "Acme Owner" },
-      { email: "owner@northgate.test", fullName: "Northgate Owner" },
+      { ...withId(acmeOwnerId), email: "owner@acme.test", fullName: "Acme Owner" },
+      { ...withId(ngOwnerId), email: "owner@northgate.test", fullName: "Northgate Owner" },
     ])
     .returning();
   await adminDb.insert(memberships).values([
@@ -208,9 +241,10 @@ async function main() {
   console.log("✓ reseller owners for acme + northgate");
 
   // Platform super-admin (apex host).
+  const adminId = await ensureAuthUser("admin@renovateconnect.test");
   await adminDb
     .insert(profiles)
-    .values({ email: "admin@renovateconnect.test", fullName: "Platform Admin", isPlatformAdmin: true });
+    .values({ ...withId(adminId), email: "admin@renovateconnect.test", fullName: "Platform Admin", isPlatformAdmin: true });
   console.log("✓ platform admin");
 
   // Third demo tenant (green, all verticals).

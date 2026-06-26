@@ -14,7 +14,7 @@ export async function installerContextOrRedirect(): Promise<{ tenant: Tenant; se
   const tenant = await getCurrentTenant();
   if (!tenant) notFound();
   const session = await getInstallerSession(tenant.id);
-  if (!session) redirect("/installer/login");
+  if (!session) redirect("/login?next=/installer");
   return { tenant, session };
 }
 

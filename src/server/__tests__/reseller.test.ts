@@ -1,5 +1,5 @@
 /**
- * M6 tests — dev-auth session signing, and reseller catalog/markup + revenue read logic.
+ * M6 tests — reseller catalog/markup + revenue read logic.
  */
 import { randomUUID } from "node:crypto";
 import { eq } from "drizzle-orm";
@@ -14,21 +14,8 @@ import {
   tenants,
   verticals,
 } from "@/db/schema";
-import { signSession, verifySession, type Session } from "@/server/auth";
 import { getCatalogForReseller, getRevenueSummary } from "@/server/reseller-data";
 import type { Tenant } from "@/server/tenant";
-
-describe("dev-auth session", () => {
-  const s: Session = { profileId: "p1", tenantId: "t1", role: "reseller_owner", email: "a@b.c" };
-  it("round-trips a signed session", () => {
-    expect(verifySession(signSession(s))).toEqual(s);
-  });
-  it("rejects a tampered token", () => {
-    const t = signSession(s);
-    expect(verifySession(t.slice(0, -2) + "xx")).toBeNull();
-    expect(verifySession("garbage")).toBeNull();
-  });
-});
 
 describe("reseller catalog + revenue", () => {
   let tenant: Tenant;

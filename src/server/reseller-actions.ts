@@ -15,9 +15,9 @@ import { getCurrentTenant, type Tenant } from "@/server/tenant";
 
 async function requireReseller(): Promise<Tenant> {
   const tenant = await getCurrentTenant();
-  if (!tenant) redirect("/reseller/login");
+  if (!tenant) redirect("/login?next=/reseller");
   const session = await getResellerSession(tenant.id);
-  if (!session) redirect("/reseller/login");
+  if (!session) redirect("/login?next=/reseller");
   return tenant;
 }
 

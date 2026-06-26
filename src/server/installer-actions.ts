@@ -15,9 +15,9 @@ import { getCurrentTenant, type Tenant } from "@/server/tenant";
 
 async function requireInstaller(): Promise<{ tenant: Tenant; profileId: string }> {
   const tenant = await getCurrentTenant();
-  if (!tenant) redirect("/installer/login");
+  if (!tenant) redirect("/login?next=/installer");
   const session = await getInstallerSession(tenant.id);
-  if (!session) redirect("/installer/login");
+  if (!session) redirect("/login?next=/installer");
   return { tenant, profileId: session.profileId };
 }
 

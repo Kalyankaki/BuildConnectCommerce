@@ -1,67 +1,77 @@
 import "server-only";
 /**
- * Lightweight session auth (DEV SHIM).
+ * Authentication via Supabase Auth, mapped to our profiles/memberships tables.
  *
- * TODO(M9/prod): replace with Supabase Auth. For now a signed (HMAC) cookie carries the
- * acting profile + tenant + role so the role-gated dashboards (reseller/admin/installer) work
- * locally. The authorization checks and RLS scoping are real; only the login mechanism is a stub.
+ * Identity rule: profiles.id === the Supabase auth user id (1:1). A profile row is ensured on
+ * first authenticated request. Role/tenant authorization comes from `memberships` (read with
+ * the admin connection — this is an auth check, not tenant-scoped data exposure).
  */
-import crypto from "node:crypto";
-import { cookies } from "next/headers";
+import { and, eq } from "drizzle-orm";
+import { adminDb } from "@/db";
+import { memberships, profiles } from "@/db/schema";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 
-export const SESSION_COOKIE = "rc_session";
-const SECRET = process.env.SESSION_SECRET ?? "dev-insecure-secret-change-me";
+export type Role = "customer" | "reseller_owner" | "reseller_staff" | "platform_admin" | "installer";
 
 export interface Session {
   profileId: string;
-  tenantId: string | null; // null for platform_admin (apex host)
-  role: "customer" | "reseller_owner" | "reseller_staff" | "platform_admin" | "installer";
   email: string;
+  isPlatformAdmin: boolean;
+  role?: Role;
+  tenantId?: string | null;
 }
 
-export function signSession(session: Session): string {
-  const data = Buffer.from(JSON.stringify(session)).toString("base64url");
-  const mac = crypto.createHmac("sha256", SECRET).update(data).digest("base64url");
-  return `${data}.${mac}`;
-}
-
-export function verifySession(token: string | undefined | null): Session | null {
-  if (!token) return null;
-  const [data, mac] = token.split(".");
-  if (!data || !mac) return null;
-  const expected = crypto.createHmac("sha256", SECRET).update(data).digest("base64url");
-  try {
-    if (!crypto.timingSafeEqual(Buffer.from(mac), Buffer.from(expected))) return null;
-    return JSON.parse(Buffer.from(data, "base64url").toString()) as Session;
-  } catch {
-    return null;
-  }
-}
-
+/** The signed-in profile (creating the profile row on first login), or null. */
 export async function getSession(): Promise<Session | null> {
-  const store = await cookies();
-  return verifySession(store.get(SESSION_COOKIE)?.value);
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user?.email) return null;
+
+  // Ensure a profile exists, keyed by the auth user id.
+  await adminDb
+    .insert(profiles)
+    .values({ id: user.id, email: user.email, fullName: (user.user_metadata?.full_name as string) ?? null })
+    .onConflictDoNothing();
+  const [profile] = await adminDb.select().from(profiles).where(eq(profiles.id, user.id)).limit(1);
+  if (!profile) return null;
+
+  return { profileId: profile.id, email: profile.email, isPlatformAdmin: profile.isPlatformAdmin };
 }
 
-const RESELLER_ROLES = new Set(["reseller_owner", "reseller_staff"]);
+const RESELLER_ROLES: Role[] = ["reseller_owner", "reseller_staff"];
 
-/** Returns the session iff it is a reseller for the given tenant; else null. */
+async function membershipRole(profileId: string, tenantId: string): Promise<Role | null> {
+  const [m] = await adminDb
+    .select({ role: memberships.role })
+    .from(memberships)
+    .where(and(eq(memberships.userId, profileId), eq(memberships.tenantId, tenantId)))
+    .limit(1);
+  return (m?.role as Role) ?? null;
+}
+
+/** Session iff the user is a reseller for the given tenant. */
 export async function getResellerSession(tenantId: string): Promise<Session | null> {
-  const s = await getSession();
-  if (!s || s.tenantId !== tenantId || !RESELLER_ROLES.has(s.role)) return null;
-  return s;
+  const base = await getSession();
+  if (!base) return null;
+  const role = await membershipRole(base.profileId, tenantId);
+  if (!role || !RESELLER_ROLES.includes(role)) return null;
+  return { ...base, role, tenantId };
 }
 
-/** Returns the session iff it is a platform admin; else null. */
+/** Session iff the user is a platform admin. */
 export async function getAdminSession(): Promise<Session | null> {
-  const s = await getSession();
-  if (!s || s.role !== "platform_admin") return null;
-  return s;
+  const base = await getSession();
+  if (!base || !base.isPlatformAdmin) return null;
+  return { ...base, role: "platform_admin", tenantId: null };
 }
 
-/** Returns the session iff it is an installer for the given tenant; else null. */
+/** Session iff the user is an installer for the given tenant. */
 export async function getInstallerSession(tenantId: string): Promise<Session | null> {
-  const s = await getSession();
-  if (!s || s.tenantId !== tenantId || s.role !== "installer") return null;
-  return s;
+  const base = await getSession();
+  if (!base) return null;
+  const role = await membershipRole(base.profileId, tenantId);
+  if (role !== "installer") return null;
+  return { ...base, role, tenantId };
 }

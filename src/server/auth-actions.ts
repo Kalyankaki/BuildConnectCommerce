@@ -1,67 +1,65 @@
 "use server";
 /**
- * DEV auth actions (sign in/out). TODO(M9/prod): replace with Supabase Auth.
+ * Auth actions backed by Supabase Auth (email + password).
  */
-import { and, eq } from "drizzle-orm";
-import { cookies } from "next/headers";
+import { z } from "zod";
 import { redirect } from "next/navigation";
-import { adminDb, withTenant } from "@/db";
-import { memberships, profiles } from "@/db/schema";
-import { SESSION_COOKIE, signSession, type Session } from "@/server/auth";
-import { getCurrentTenant } from "@/server/tenant";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 
-async function setSessionCookie(session: Session): Promise<void> {
-  const store = await cookies();
-  store.set(SESSION_COOKIE, signSession(session), {
-    httpOnly: true,
-    sameSite: "lax",
-    path: "/",
-    maxAge: 60 * 60 * 24 * 7,
+export type AuthState = { error?: string; message?: string };
+
+const credsSchema = z.object({
+  email: z.string().email("Enter a valid email"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+  redirectTo: z.string().optional(),
+});
+
+export async function signInWithPassword(_prev: AuthState, formData: FormData): Promise<AuthState> {
+  const parsed = credsSchema.safeParse({
+    email: String(formData.get("email") ?? "").trim(),
+    password: String(formData.get("password") ?? ""),
+    redirectTo: String(formData.get("redirectTo") ?? "/"),
   });
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
+
+  const supabase = await createSupabaseServerClient();
+  const { error } = await supabase.auth.signInWithPassword({
+    email: parsed.data.email,
+    password: parsed.data.password,
+  });
+  if (error) return { error: error.message };
+
+  redirect(parsed.data.redirectTo || "/");
 }
 
-/** Dev: sign in as a platform admin (apex host). */
-export async function devSignInAdmin(formData: FormData): Promise<void> {
-  const profileId = String(formData.get("profileId") ?? "");
-  const [admin] = await adminDb
-    .select()
-    .from(profiles)
-    .where(and(eq(profiles.id, profileId), eq(profiles.isPlatformAdmin, true)))
-    .limit(1);
-  if (!admin) return;
-  await setSessionCookie({ profileId: admin.id, tenantId: null, role: "platform_admin", email: admin.email });
-  redirect("/admin");
-}
+export async function signUp(_prev: AuthState, formData: FormData): Promise<AuthState> {
+  const parsed = credsSchema
+    .extend({ fullName: z.string().optional() })
+    .safeParse({
+      email: String(formData.get("email") ?? "").trim(),
+      password: String(formData.get("password") ?? ""),
+      fullName: String(formData.get("fullName") ?? "").trim(),
+      redirectTo: String(formData.get("redirectTo") ?? "/"),
+    });
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
 
-/** Dev: sign in as a specific reseller membership of the current tenant. */
-export async function devSignIn(formData: FormData): Promise<void> {
-  const membershipId = String(formData.get("membershipId") ?? "");
-  const tenant = await getCurrentTenant();
-  if (!tenant) return;
-
-  const row = await withTenant(tenant.id, async (tx) => {
-    const [m] = await tx
-      .select({ role: memberships.role, profileId: profiles.id, email: profiles.email })
-      .from(memberships)
-      .innerJoin(profiles, eq(profiles.id, memberships.userId))
-      .where(eq(memberships.id, membershipId))
-      .limit(1);
-    return m;
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase.auth.signUp({
+    email: parsed.data.email,
+    password: parsed.data.password,
+    options: { data: { full_name: parsed.data.fullName || null } },
   });
-  if (!row) return;
+  if (error) return { error: error.message };
 
-  const session: Session = {
-    profileId: row.profileId,
-    tenantId: tenant.id,
-    role: row.role,
-    email: row.email,
-  };
-  await setSessionCookie(session);
-  redirect(row.role === "installer" ? "/installer" : "/reseller");
+  // If email confirmation is required, there's no session yet.
+  if (!data.session) {
+    return { message: "Check your email to confirm your account, then sign in." };
+  }
+  redirect(parsed.data.redirectTo || "/");
 }
 
 export async function signOut(): Promise<void> {
-  const store = await cookies();
-  store.delete(SESSION_COOKIE);
-  redirect("/reseller/login");
+  const supabase = await createSupabaseServerClient();
+  await supabase.auth.signOut();
+  redirect("/login");
 }
