@@ -1,20 +1,44 @@
 "use client";
 
+import { useState } from "react";
 import { useActionState } from "react";
 import { provisionTenant, type ProvisionState } from "@/server/provisioning";
+import { formatCents } from "@/lib/format";
 
-type VerticalOption = { slug: string; name: string; icon: string | null };
+type Item = { variantId: string; productName: string; sku: string; listCents: number; uom: string };
+type Group = { id: string; name: string; icon: string | null; items: Item[] };
+type Theme = { id: string; name: string; primary: string; secondary: string };
 
 const initialState: ProvisionState = { ok: false };
+const input = "w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 focus:ring-slate-300";
 
 export function OnboardingForm({
-  verticals,
+  catalog,
+  themes,
   rootDomain,
 }: {
-  verticals: VerticalOption[];
+  catalog: Group[];
+  themes: Theme[];
   rootDomain: string;
 }) {
   const [state, formAction, isPending] = useActionState(provisionTenant, initialState);
+  const [themeId, setThemeId] = useState(themes[0]?.id ?? "midnight");
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+
+  function toggle(id: string) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  }
+  function toggleGroup(group: Group, on: boolean) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      group.items.forEach((it) => (on ? next.add(it.variantId) : next.delete(it.variantId)));
+      return next;
+    });
+  }
 
   if (state.ok && state.slug) {
     return (
@@ -37,83 +61,113 @@ export function OnboardingForm({
   }
 
   return (
-    <form action={formAction} className="mt-8 space-y-6">
+    <form action={formAction} className="mt-8 space-y-8">
       {state.error && (
-        <p className="rounded-lg border border-red-300 bg-red-50 px-4 py-2 text-sm text-red-700">
-          {state.error}
-        </p>
+        <p className="rounded-lg border border-red-300 bg-red-50 px-4 py-2 text-sm text-red-700">{state.error}</p>
       )}
 
+      {/* Brand */}
       <fieldset className="space-y-4">
         <legend className="font-semibold">Brand</legend>
         <Field label="Storefront name">
-          <input name="displayName" required className={inputClass} placeholder="Acme Remodel" />
+          <input name="displayName" required className={input} placeholder="Acme Remodel" />
         </Field>
-        <Field label="Subdomain">
+        <Field label="Subdomain / store slug">
           <div className="flex items-center gap-2">
-            <input
-              name="slug"
-              required
-              pattern="[a-z0-9-]+"
-              className={inputClass}
-              placeholder="acme"
-            />
-            <span className="text-sm text-slate-500">.{rootDomain}</span>
+            <input name="slug" required pattern="[a-z0-9-]+" className={input} placeholder="acme" />
+            <span className="text-sm text-slate-500">/store/…</span>
           </div>
         </Field>
-        <div className="flex gap-6">
-          <Field label="Primary color">
-            <input type="color" name="primaryColor" defaultValue="#0f172a" className="h-10 w-20" />
-          </Field>
-          <Field label="Secondary color">
-            <input type="color" name="secondaryColor" defaultValue="#64748b" className="h-10 w-20" />
-          </Field>
-        </div>
         <Field label="Support email">
-          <input type="email" name="supportEmail" className={inputClass} placeholder="help@acme.com" />
+          <input type="email" name="supportEmail" className={input} placeholder="help@acme.com" />
         </Field>
       </fieldset>
 
-      <fieldset className="space-y-2">
-        <legend className="font-semibold">Product lines</legend>
-        <p className="text-sm text-slate-500">Pick the verticals your storefront will sell.</p>
-        <div className="grid gap-2 sm:grid-cols-2">
-          {verticals.map((v) => (
-            <label key={v.slug} className="flex items-center gap-2 rounded-lg border p-3">
-              <input type="checkbox" name="verticalSlugs" value={v.slug} />
-              <span>
-                {v.icon ?? "🔧"} {v.name}
+      {/* Theme */}
+      <fieldset className="space-y-3">
+        <legend className="font-semibold">Theme</legend>
+        <input type="hidden" name="themeId" value={themeId} />
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+          {themes.map((t) => (
+            <button
+              type="button"
+              key={t.id}
+              onClick={() => setThemeId(t.id)}
+              className={`flex items-center gap-3 rounded-xl border-2 p-3 text-left transition ${
+                themeId === t.id ? "border-slate-900" : "border-slate-200 hover:border-slate-300"
+              }`}
+            >
+              <span className="flex">
+                <span className="h-7 w-7 rounded-l-md" style={{ backgroundColor: t.primary }} />
+                <span className="h-7 w-7 rounded-r-md" style={{ backgroundColor: t.secondary }} />
               </span>
-            </label>
+              <span className="text-sm font-medium">{t.name}</span>
+            </button>
           ))}
         </div>
       </fieldset>
 
+      {/* Items */}
+      <fieldset className="space-y-4">
+        <legend className="font-semibold">Products to resell</legend>
+        <p className="text-sm text-slate-500">
+          Selected {selected.size} item{selected.size === 1 ? "" : "s"}. Pick at least one.
+        </p>
+        {catalog.map((group) => {
+          const allOn = group.items.every((it) => selected.has(it.variantId));
+          return (
+            <div key={group.id} className="rounded-xl border">
+              <div className="flex items-center justify-between border-b bg-slate-50 px-4 py-2">
+                <span className="font-medium">
+                  {group.icon} {group.name}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => toggleGroup(group, !allOn)}
+                  className="text-xs font-medium text-slate-600 underline"
+                >
+                  {allOn ? "Clear all" : "Select all"}
+                </button>
+              </div>
+              <div className="grid gap-1 p-3 sm:grid-cols-2">
+                {group.items.map((it) => (
+                  <label key={it.variantId} className="flex items-center justify-between gap-2 rounded-lg px-2 py-1.5 hover:bg-slate-50">
+                    <span className="flex items-center gap-2 text-sm">
+                      <input
+                        type="checkbox"
+                        name="variantIds"
+                        value={it.variantId}
+                        checked={selected.has(it.variantId)}
+                        onChange={() => toggle(it.variantId)}
+                      />
+                      {it.productName}
+                    </span>
+                    <span className="text-xs text-slate-500">
+                      {formatCents(it.listCents)}
+                      {it.uom === "each" ? "" : `/${it.uom}`}
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          );
+        })}
+      </fieldset>
+
+      {/* Pricing & coverage */}
       <fieldset className="space-y-4">
         <legend className="font-semibold">Pricing &amp; coverage</legend>
         <Field label="Markup over list (%)">
-          <input
-            type="number"
-            name="markupPercent"
-            min={0}
-            step={0.5}
-            defaultValue={20}
-            className={inputClass}
-          />
+          <input type="number" name="markupPercent" min={0} step={0.5} defaultValue={20} className={input} />
         </Field>
         <Field label="Coverage ZIP codes (comma-separated)">
-          <input name="coverageZips" className={inputClass} placeholder="98036, 98037, 98101" />
+          <input name="coverageZips" className={input} placeholder="98036, 98037, 98101" />
         </Field>
-      </fieldset>
-
-      <fieldset className="rounded-lg border border-dashed p-4 text-sm text-slate-500">
-        <legend className="px-1 font-semibold text-slate-600">Payments</legend>
-        Stripe Connect onboarding happens after launch (M4). Skipped for now.
       </fieldset>
 
       <button
         type="submit"
-        disabled={isPending}
+        disabled={isPending || selected.size === 0}
         className="rounded-lg bg-slate-900 px-6 py-3 font-medium text-white hover:bg-slate-700 disabled:opacity-50"
       >
         {isPending ? "Creating…" : "Create storefront"}
@@ -121,8 +175,6 @@ export function OnboardingForm({
     </form>
   );
 }
-
-const inputClass = "w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 focus:ring-slate-400";
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (

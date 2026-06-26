@@ -66,7 +66,7 @@ export default async function StorefrontLayout({ children }: { children: React.R
           ) : (
             <nav className="flex items-center gap-6 text-sm font-medium text-slate-600">
               <a href="/#how" className="hidden hover:text-slate-900 sm:inline">How it works</a>
-              <a href="/#verticals" className="hidden hover:text-slate-900 sm:inline">What we install</a>
+              <Link href="/stores" className="hover:text-slate-900">Stores</Link>
               <Link
                 href="/onboarding"
                 className="rounded-lg bg-amber-500 px-4 py-2 font-semibold text-slate-950 transition hover:bg-amber-400"

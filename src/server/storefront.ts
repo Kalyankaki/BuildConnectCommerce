@@ -15,6 +15,7 @@ import {
   services,
   taxRules,
   tenantCatalog,
+  tenants,
   verticals,
 } from "@/db/schema";
 import { customerUnitPrice, type ServiceInput } from "@/lib/pricing";
@@ -36,6 +37,49 @@ export type PricedVariant = {
   unitOfMeasure: string;
   unitPriceCents: number;
 };
+
+/** Full master catalog grouped by vertical, for the onboarding item picker. */
+export async function getFullCatalog() {
+  const rows = await adminDb
+    .select({ vertical: verticals, product: products, variant: productVariants })
+    .from(verticals)
+    .innerJoin(products, eq(products.verticalId, verticals.id))
+    .innerJoin(productVariants, eq(productVariants.productId, products.id))
+    .orderBy(verticals.name, products.name);
+
+  const groups = new Map<
+    string,
+    { id: string; name: string; icon: string | null; items: { variantId: string; productName: string; sku: string; listCents: number; uom: string }[] }
+  >();
+  for (const { vertical, product, variant } of rows) {
+    if (!groups.has(vertical.id)) {
+      groups.set(vertical.id, { id: vertical.id, name: vertical.name, icon: vertical.icon, items: [] });
+    }
+    groups.get(vertical.id)!.items.push({
+      variantId: variant.id,
+      productName: product.name,
+      sku: variant.sku,
+      listCents: variant.platformListCents,
+      uom: variant.unitOfMeasure,
+    });
+  }
+  return [...groups.values()];
+}
+
+/** All active storefronts, for the public directory. */
+export async function listActiveStores() {
+  return adminDb
+    .select({
+      slug: tenants.slug,
+      displayName: tenants.displayName,
+      primaryColor: tenants.primaryColor,
+      secondaryColor: tenants.secondaryColor,
+      coverageZips: tenants.coverageZips,
+    })
+    .from(tenants)
+    .where(eq(tenants.status, "active"))
+    .orderBy(tenants.displayName);
+}
 
 /** Verticals a tenant actively sells (has at least one enabled catalog variant). */
 export const getEnabledVerticals = cache(async (tenantId: string): Promise<EnabledVertical[]> => {

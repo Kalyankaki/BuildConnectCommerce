@@ -1,25 +1,15 @@
 "use server";
 /**
- * Tenant provisioning — the "fork a self-branded site" flow (B.3). Provisioning a tenant
- * is NOT copying code: it inserts a tenants row + markup policy + enabled catalog, and the
- * subdomain goes live immediately against the shared storefront.
- *
- * Runs with the admin (RLS-bypass) connection: it creates a brand-new tenant, so there is
- * no current_tenant context to scope to yet. Stripe Connect onboarding is stubbed (M4).
+ * Tenant provisioning — the "fork a self-branded site" flow (B.3). Inserts a tenants row +
+ * markup policy + the reseller's chosen catalog items, and the storefront goes live at
+ * /store/<slug> immediately. Runs with the admin (RLS-bypass) connection.
  */
 import { z } from "zod";
-import { eq, inArray } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { adminDb } from "@/db";
-import {
-  markupPolicies,
-  memberships,
-  productVariants,
-  products,
-  tenantCatalog,
-  tenants,
-  verticals,
-} from "@/db/schema";
+import { markupPolicies, memberships, tenantCatalog, tenants } from "@/db/schema";
 import { getSession, isAuthConfigured } from "@/server/auth";
+import { getTheme } from "@/lib/themes";
 
 export type ProvisionState = { ok: boolean; error?: string; slug?: string };
 
@@ -30,25 +20,20 @@ const schema = z.object({
     .min(2)
     .max(40)
     .regex(/^[a-z0-9-]+$/, "Subdomain: lowercase letters, digits, and hyphens only"),
-  primaryColor: z.string().regex(/^#[0-9a-fA-F]{6}$/, "Use a hex color like #b91c1c"),
-  secondaryColor: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional().or(z.literal("")),
+  themeId: z.string().min(1),
   supportEmail: z.string().email().optional().or(z.literal("")),
-  verticalSlugs: z.array(z.string()).min(1, "Pick at least one product line"),
+  variantIds: z.array(z.string().uuid()).min(1, "Pick at least one product to resell"),
   markupBps: z.number().int().min(0).max(100000),
   coverageZips: z.array(z.string().regex(/^\d{3,5}$/)),
 });
 
-export async function provisionTenant(
-  _prev: ProvisionState,
-  formData: FormData,
-): Promise<ProvisionState> {
+export async function provisionTenant(_prev: ProvisionState, formData: FormData): Promise<ProvisionState> {
   const parsed = schema.safeParse({
     displayName: String(formData.get("displayName") ?? "").trim(),
     slug: String(formData.get("slug") ?? "").trim().toLowerCase(),
-    primaryColor: String(formData.get("primaryColor") ?? "#0f172a"),
-    secondaryColor: String(formData.get("secondaryColor") ?? ""),
+    themeId: String(formData.get("themeId") ?? "midnight"),
     supportEmail: String(formData.get("supportEmail") ?? ""),
-    verticalSlugs: formData.getAll("verticalSlugs").map(String),
+    variantIds: formData.getAll("variantIds").map(String),
     markupBps: Math.round(Number(formData.get("markupPercent") ?? 0) * 100),
     coverageZips: String(formData.get("coverageZips") ?? "")
       .split(",")
@@ -56,33 +41,29 @@ export async function provisionTenant(
       .filter(Boolean),
   });
 
-  if (!parsed.success) {
-    return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid input" };
-  }
+  if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid input" };
   const data = parsed.data;
 
   const session = await getSession();
   if (isAuthConfigured() && !session) return { ok: false, error: "Please sign in to create a storefront." };
 
-  // Subdomain must be unique.
   const existing = await adminDb
     .select({ id: tenants.id })
     .from(tenants)
     .where(eq(tenants.slug, data.slug))
     .limit(1);
-  if (existing.length > 0) {
-    return { ok: false, error: `Subdomain "${data.slug}" is already taken` };
-  }
+  if (existing.length > 0) return { ok: false, error: `Subdomain "${data.slug}" is already taken` };
 
-  // Provision: tenant -> markup policy -> catalog.
+  const theme = getTheme(data.themeId);
+
   const [tenant] = await adminDb
     .insert(tenants)
     .values({
       slug: data.slug,
       displayName: data.displayName,
       status: "active",
-      primaryColor: data.primaryColor,
-      secondaryColor: data.secondaryColor || null,
+      primaryColor: theme.primary,
+      secondaryColor: theme.secondary,
       supportEmail: data.supportEmail || null,
       coverageZips: data.coverageZips,
     })
@@ -92,13 +73,8 @@ export async function provisionTenant(
     .insert(markupPolicies)
     .values({ tenantId: tenant.id, name: "Standard", defaultMarkupBps: data.markupBps })
     .returning();
+  await adminDb.update(tenants).set({ defaultMarkupPolicyId: policy.id }).where(eq(tenants.id, tenant.id));
 
-  await adminDb
-    .update(tenants)
-    .set({ defaultMarkupPolicyId: policy.id })
-    .where(eq(tenants.id, tenant.id));
-
-  // The creator becomes the storefront owner (when signed in).
   if (session) {
     await adminDb
       .insert(memberships)
@@ -106,21 +82,11 @@ export async function provisionTenant(
       .onConflictDoNothing();
   }
 
-  // Enable every variant in the chosen verticals.
-  const variants = await adminDb
-    .select({ id: productVariants.id })
-    .from(productVariants)
-    .innerJoin(products, eq(productVariants.productId, products.id))
-    .innerJoin(verticals, eq(products.verticalId, verticals.id))
-    .where(inArray(verticals.slug, data.verticalSlugs));
-
-  if (variants.length > 0) {
-    await adminDb
-      .insert(tenantCatalog)
-      .values(variants.map((v) => ({ tenantId: tenant.id, variantId: v.id, enabled: true })));
-  }
-
-  // TODO(M4): kick off Stripe Connect onboarding for this tenant.
+  // Enable the chosen items.
+  await adminDb
+    .insert(tenantCatalog)
+    .values(data.variantIds.map((variantId) => ({ tenantId: tenant.id, variantId, enabled: true })))
+    .onConflictDoNothing();
 
   return { ok: true, slug: tenant.slug };
 }
