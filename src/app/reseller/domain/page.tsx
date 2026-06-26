@@ -1,11 +1,13 @@
 import { resellerContextOrRedirect } from "@/server/reseller-data";
 import { setCustomDomain, verifyCustomDomain } from "@/server/reseller-actions";
+import { getDomainStatus, isVercelConfigured } from "@/server/vercel";
 
 export const metadata = { title: "Custom domain" };
 
 export default async function DomainPage() {
   const { tenant } = await resellerContextOrRedirect();
   const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN ?? "renovateconnect.app";
+  const status = tenant.customDomain ? await getDomainStatus(tenant.customDomain) : null;
 
   return (
     <div className="max-w-2xl">
@@ -39,15 +41,23 @@ export default async function DomainPage() {
             )}
           </p>
           <div className="mt-3">
-            <p className="font-medium">1. Add this DNS record at your registrar:</p>
+            <p className="font-medium">1. Add {status && status.records.length > 1 ? "these DNS records" : "this DNS record"} at your registrar:</p>
             <pre className="mt-2 overflow-x-auto rounded-lg bg-slate-900 p-3 text-xs text-slate-100">
-{`CNAME   ${tenant.customDomain}   ->   ${tenant.slug}.${rootDomain}`}
+{status
+  ? status.records.map((r) => `${r.type.padEnd(6)} ${r.name.padEnd(28)} ${r.value}`).join("\n")
+  : `CNAME   ${tenant.customDomain}   ->   cname.vercel-dns.com`}
             </pre>
+            {!isVercelConfigured() && (
+              <p className="mt-2 text-xs text-slate-500">
+                (Domain automation is off — set <code>VERCEL_TOKEN</code> + <code>VERCEL_PROJECT_ID</code>{" "}
+                to attach &amp; verify domains automatically.)
+              </p>
+            )}
           </div>
           {!tenant.customDomainVerified && (
             <form action={verifyCustomDomain} className="mt-3">
               <button className="rounded-lg border px-4 py-2 hover:bg-slate-100">
-                Verify now (dev: marks verified)
+                {isVercelConfigured() ? "Check verification" : "Verify now (dev)"}
               </button>
             </form>
           )}

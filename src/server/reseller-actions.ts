@@ -11,6 +11,7 @@ import { redirect } from "next/navigation";
 import { adminDb, withTenant } from "@/db";
 import { markupPolicies, tenantCatalog, tenants } from "@/db/schema";
 import { getResellerSession, isAuthConfigured } from "@/server/auth";
+import { addProjectDomain, isVercelConfigured, verifyProjectDomain } from "@/server/vercel";
 import { getCurrentTenant, type Tenant } from "@/server/tenant";
 
 async function requireReseller(): Promise<Tenant> {
@@ -132,6 +133,8 @@ export async function setCustomDomain(formData: FormData): Promise<void> {
   const domain = String(formData.get("domain") ?? "").trim().toLowerCase();
   const ok = /^[a-z0-9.-]+\.[a-z]{2,}$/.test(domain);
   if (!ok) return;
+  // Attach to the Vercel project (no-op until VERCEL_TOKEN is set).
+  if (isVercelConfigured()) await addProjectDomain(domain);
   await adminDb
     .update(tenants)
     .set({ customDomain: domain, customDomainVerified: false, updatedAt: new Date() })
@@ -139,13 +142,14 @@ export async function setCustomDomain(formData: FormData): Promise<void> {
   revalidatePath("/reseller/domain");
 }
 
-/** DEV: mark the custom domain verified (production verifies the CNAME/TXT record). */
+/** Verify via the Vercel API when configured; otherwise (dev) mark verified for testing. */
 export async function verifyCustomDomain(): Promise<void> {
   const tenant = await requireReseller();
   if (!tenant.customDomain) return;
+  const verified = isVercelConfigured() ? await verifyProjectDomain(tenant.customDomain) : true;
   await adminDb
     .update(tenants)
-    .set({ customDomainVerified: true, updatedAt: new Date() })
+    .set({ customDomainVerified: verified, updatedAt: new Date() })
     .where(and(eq(tenants.id, tenant.id)));
   revalidatePath("/reseller/domain");
 }
