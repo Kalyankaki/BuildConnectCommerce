@@ -50,12 +50,19 @@ export async function createVertical(formData: FormData): Promise<void> {
 export async function createProduct(formData: FormData): Promise<void> {
   await requireAdmin();
   const parsed = z
-    .object({ verticalId: z.string().uuid(), name: z.string().min(1), brand: z.string().optional(), description: z.string().optional() })
+    .object({
+      verticalId: z.string().uuid(),
+      name: z.string().min(1),
+      brand: z.string().optional(),
+      description: z.string().optional(),
+      defaultImageUrl: z.string().url().optional(),
+    })
     .safeParse({
       verticalId: String(formData.get("verticalId") ?? ""),
       name: String(formData.get("name") ?? "").trim(),
       brand: String(formData.get("brand") ?? "").trim() || undefined,
       description: String(formData.get("description") ?? "").trim() || undefined,
+      defaultImageUrl: String(formData.get("defaultImageUrl") ?? "").trim() || undefined,
     });
   if (!parsed.success) return;
   await adminDb.insert(products).values(parsed.data);

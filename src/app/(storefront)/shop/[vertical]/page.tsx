@@ -4,6 +4,7 @@ import { ArrowRight, ChevronRight } from "lucide-react";
 import { getCurrentTenant, getStoreBase } from "@/server/tenant";
 import { getStorefrontVertical } from "@/server/storefront";
 import { formatCents } from "@/lib/format";
+import { ProductImage } from "@/components/product-image";
 
 export default async function VerticalPage({ params }: { params: Promise<{ vertical: string }> }) {
   const { vertical: slug } = await params;
@@ -44,23 +45,26 @@ export default async function VerticalPage({ params }: { params: Promise<{ verti
               <li key={p.id}>
                 <Link
                   href={`${base}/product/${p.id}`}
-                  className="group flex h-full flex-col rounded-2xl border border-slate-200 bg-white p-6 transition hover:-translate-y-0.5 hover:shadow-lg"
+                  className="group flex h-full flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white transition hover:-translate-y-0.5 hover:shadow-lg"
                 >
-                  <span className="font-display text-lg font-semibold">{p.name}</span>
-                  {p.brand && <span className="text-sm text-slate-500">{p.brand}</span>}
-                  <span className="mt-4 text-2xl font-bold">
-                    {formatCents(from)}
-                    <span className="text-sm font-normal text-slate-500">
-                      {uom === "each" ? " / unit" : ` / ${uom}`}
+                  <ProductImage src={p.defaultImageUrl} alt={p.name} icon={vertical.icon} className="h-44 w-full" />
+                  <div className="flex flex-1 flex-col p-6">
+                    <span className="font-display text-lg font-semibold">{p.name}</span>
+                    {p.brand && <span className="text-sm text-slate-500">{p.brand}</span>}
+                    <span className="mt-4 text-2xl font-bold">
+                      {formatCents(from)}
+                      <span className="text-sm font-normal text-slate-500">
+                        {uom === "each" ? " / unit" : ` / ${uom}`}
+                      </span>
                     </span>
-                  </span>
-                  <span className="mt-1 text-xs uppercase tracking-wide text-slate-400">starting price · before install</span>
-                  <span
-                    className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold"
-                    style={{ color: "var(--brand-primary)" }}
-                  >
-                    Configure your job <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
-                  </span>
+                    <span className="mt-1 text-xs uppercase tracking-wide text-slate-400">starting price · before install</span>
+                    <span
+                      className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold"
+                      style={{ color: "var(--brand-primary)" }}
+                    >
+                      Configure your job <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
+                    </span>
+                  </div>
                 </Link>
               </li>
             );

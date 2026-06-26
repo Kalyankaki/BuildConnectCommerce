@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { ChevronRight, FileText, Hammer, Package, Truck, Trash2 } from "lucide-react";
 import { getCurrentTenant, getStoreBase } from "@/server/tenant";
 import { getStorefrontProduct } from "@/server/storefront";
+import { ProductImage } from "@/components/product-image";
 import { Configurator } from "./configurator";
 
 export default async function ProductPage({ params }: { params: Promise<{ productId: string }> }) {
@@ -27,6 +28,12 @@ export default async function ProductPage({ params }: { params: Promise<{ produc
 
       <div className="mt-6 grid gap-10 lg:grid-cols-2">
         <div>
+          <ProductImage
+            src={product.defaultImageUrl}
+            alt={product.name}
+            icon={vertical.icon}
+            className="mb-6 h-72 w-full rounded-2xl"
+          />
           <h1 className="font-display text-3xl font-bold tracking-tight">{product.name}</h1>
           {product.brand && <p className="mt-1 text-slate-500">{product.brand}</p>}
           {product.description && <p className="mt-5 text-slate-700">{product.description}</p>}

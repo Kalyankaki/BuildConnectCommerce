@@ -73,6 +73,7 @@ export default async function AdminCatalog() {
           <input name="name" placeholder="Product name" className={input} />
           <input name="brand" placeholder="Brand (optional)" className={input} />
           <input name="description" placeholder="Description (optional)" className={input} />
+          <input name="defaultImageUrl" placeholder="Image URL (optional)" className={input} />
           <button className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white">Create</button>
         </form>
 
