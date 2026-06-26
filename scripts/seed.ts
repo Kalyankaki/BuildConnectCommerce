@@ -134,6 +134,60 @@ async function main() {
   ]);
   console.log("✓ services");
 
+  // ── Extra sample product lines (for testing variety) ────────────────────
+  const [sinks, panels, blindsV, island] = await adminDb
+    .insert(verticals)
+    .values([
+      { slug: "sinks", name: "Sinks", configuratorType: "unit", icon: "🚰" },
+      { slug: "panels", name: "Decorative Wall Panels", configuratorType: "area", icon: "🧱" },
+      { slug: "blinds", name: "Blinds", configuratorType: "unit", icon: "🪟" },
+      { slug: "kitchen-island", name: "Kitchen Island", configuratorType: "unit", icon: "🍽️" },
+    ])
+    .returning();
+
+  const [sinkP, panelP, blindP, islandP] = await adminDb
+    .insert(products)
+    .values([
+      { verticalId: sinks.id, name: "Undermount Quartz Sink", brand: "BasinWorks" },
+      { verticalId: panels.id, name: "Acoustic Slat Panel", brand: "WallCraft" },
+      { verticalId: blindsV.id, name: "Motorized Roller Blind", brand: "Lumina" },
+      { verticalId: island.id, name: "Quartz-Top Kitchen Island", brand: "BuildCo" },
+    ])
+    .returning();
+
+  const more = await adminDb
+    .insert(productVariants)
+    .values([
+      { productId: sinkP.id, sku: "SNK-STD", attributes: { material: "Quartz" }, unitOfMeasure: "each", wholesaleCents: 9000, platformListCents: 14000 },
+      { productId: sinkP.id, sku: "SNK-DBL", attributes: { material: "Quartz", bowls: "Double" }, unitOfMeasure: "each", wholesaleCents: 13000, platformListCents: 19000 },
+      { productId: panelP.id, sku: "PNL-OAK", attributes: { finish: "Oak" }, unitOfMeasure: "sqft", wholesaleCents: 550, platformListCents: 900 },
+      { productId: panelP.id, sku: "PNL-WAL", attributes: { finish: "Walnut" }, unitOfMeasure: "sqft", wholesaleCents: 650, platformListCents: 1050 },
+      { productId: blindP.id, sku: "BLN-RLR", attributes: { type: "Roller" }, unitOfMeasure: "each", wholesaleCents: 9000, platformListCents: 15000 },
+      { productId: islandP.id, sku: "ISL-WTF", attributes: { edge: "Waterfall" }, unitOfMeasure: "each", wholesaleCents: 160000, platformListCents: 240000 },
+    ])
+    .returning();
+  variants.push(...more); // include in the demo tenants' catalogs below
+
+  await adminDb.insert(services).values([
+    // Sinks (unit)
+    { verticalId: sinks.id, type: "delivery", pricingModel: "flat", baseCents: 3900, perUnitCents: 0 },
+    { verticalId: sinks.id, type: "labor", pricingModel: "per_unit", baseCents: 0, perUnitCents: 16000 },
+    { verticalId: sinks.id, type: "haulaway", pricingModel: "per_unit", baseCents: 0, perUnitCents: 3000 },
+    // Decorative panels (area)
+    { verticalId: panels.id, type: "delivery", pricingModel: "flat", baseCents: 0, perUnitCents: 0 },
+    { verticalId: panels.id, type: "labor", pricingModel: "per_area", baseCents: 0, perUnitCents: 600 },
+    { verticalId: panels.id, type: "haulaway", pricingModel: "flat", baseCents: 0, perUnitCents: 0 },
+    // Blinds (unit)
+    { verticalId: blindsV.id, type: "delivery", pricingModel: "flat", baseCents: 1900, perUnitCents: 0 },
+    { verticalId: blindsV.id, type: "labor", pricingModel: "per_unit", baseCents: 0, perUnitCents: 6000 },
+    { verticalId: blindsV.id, type: "haulaway", pricingModel: "per_unit", baseCents: 0, perUnitCents: 1500 },
+    // Kitchen island (unit; labor = quote after a site visit)
+    { verticalId: island.id, type: "delivery", pricingModel: "flat", baseCents: 14900, perUnitCents: 0 },
+    { verticalId: island.id, type: "labor", pricingModel: "quote", baseCents: 0, perUnitCents: 0 },
+    { verticalId: island.id, type: "haulaway", pricingModel: "flat", baseCents: 0, perUnitCents: 0 },
+  ]);
+  console.log("✓ extra product lines: sinks, panels, blinds, kitchen-island");
+
   // ── ZIP zones + tax (Lynnwood/Seattle WA, per the BuildConnect reference) ─
   await adminDb.insert(serviceZones).values([
     { zip: "98036", deliveryFeeCents: 7500, laborMultiplierBps: 10000, leadTimeDays: 7 },
