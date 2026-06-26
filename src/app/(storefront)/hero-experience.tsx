@@ -1,20 +1,21 @@
 "use client";
 /**
- * Interactive 3D room hero. Shows a furnished luxury-ish living space behind the title. Click
- * "Explore the room" (or any furniture) to fade the title and zoom the camera inside; then
- * click furniture to focus it and reveal a price/model card. "Back" restores the hero view.
+ * Interactive 3D room hero. A furnished living space behind the title; click "Explore the
+ * room" (or any piece) to fade the title and zoom inside, then click furniture for a
+ * price/model card. "Back" restores the hero view.
  *
- * Code-built (primitive geometry, stylized) — browser-only mount with a glow fallback.
+ * Robustness: the room + lights render immediately (never blocked). The studio HDRI loads in
+ * its own Suspense + error boundary, so a slow/missing/large HDRI can't blank or crash the scene.
  */
-import { Suspense, useEffect, useRef, useState } from "react";
+import { Component, Suspense, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Canvas, type ThreeEvent } from "@react-three/fiber";
 import { CameraControls, ContactShadows, Environment, Float } from "@react-three/drei";
 import { ArrowRight, Hammer, Move3d, X } from "lucide-react";
 
 type ItemKey = "floor" | "island" | "sofa" | "panel" | "blinds";
-
 type Showcase = { name: string; price: string; model: string; blurb: string };
+
 const ITEMS: Record<ItemKey, Showcase> = {
   floor: { name: "Engineered Oak Flooring", price: "$7.50 / sq ft", model: "TimberCo · Natural Oak", blurb: "Wide-plank engineered hardwood, installed over your old carpet — haulaway included." },
   island: { name: "Quartz Kitchen Island", price: "from $2,400", model: "Bianco · Waterfall edge", blurb: "Custom island with a quartz waterfall countertop, delivered and fitted." },
@@ -23,7 +24,6 @@ const ITEMS: Record<ItemKey, Showcase> = {
   blinds: { name: "Motorized Blinds", price: "from $180 / window", model: "Lumina · Smart roller", blurb: "Made-to-measure roller blinds with a quiet motor and app control." },
 };
 
-// camera framings: [posX,posY,posZ, targetX,targetY,targetZ]
 const HERO_CAM: [number, number, number, number, number, number] = [7.5, 5.2, 8.5, 0, 1, 0];
 const INSIDE_CAM: [number, number, number, number, number, number] = [2.6, 2.3, 3.8, 0, 1, -0.6];
 const FOCUS: Record<ItemKey, [number, number, number, number, number, number]> = {
@@ -34,20 +34,25 @@ const FOCUS: Record<ItemKey, [number, number, number, number, number, number]> =
   blinds: [-0.6, 2.2, 2.4, 2.1, 1.6, -2.6],
 };
 
-function Clickable({
-  onPick,
-  children,
-}: {
-  onPick: (e: ThreeEvent<MouseEvent>) => void;
-  children: React.ReactNode;
-}) {
+/** Swallows errors from the optional HDRI so it can never crash the scene. */
+class SafeBoundary extends Component<{ children: React.ReactNode }, { failed: boolean }> {
+  state = { failed: false };
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+  render() {
+    return this.state.failed ? null : this.props.children;
+  }
+}
+
+function Clickable({ onPick, children }: { onPick: () => void; children: React.ReactNode }) {
   return (
     <group
-      onClick={(e) => {
+      onClick={(e: ThreeEvent<MouseEvent>) => {
         e.stopPropagation();
-        onPick(e);
+        onPick();
       }}
-      onPointerOver={(e) => {
+      onPointerOver={(e: ThreeEvent<PointerEvent>) => {
         e.stopPropagation();
         document.body.style.cursor = "pointer";
       }}
@@ -67,7 +72,7 @@ function Room({ onSelect }: { onSelect: (k: ItemKey) => void }) {
       <Clickable onPick={() => onSelect("floor")}>
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
           <planeGeometry args={[8, 8]} />
-          <meshStandardMaterial color="#b98a52" roughness={0.4} metalness={0.15} />
+          <meshStandardMaterial color="#b98a52" roughness={0.45} metalness={0.1} />
         </mesh>
       </Clickable>
 
@@ -80,11 +85,11 @@ function Room({ onSelect }: { onSelect: (k: ItemKey) => void }) {
       {/* Back + side walls */}
       <mesh position={[0, 2, -3]} receiveShadow>
         <boxGeometry args={[8, 4, 0.15]} />
-        <meshStandardMaterial color="#262b33" roughness={0.9} />
+        <meshStandardMaterial color="#262b33" roughness={0.95} />
       </mesh>
       <mesh position={[-3, 2, 0]} receiveShadow>
         <boxGeometry args={[0.15, 4, 8]} />
-        <meshStandardMaterial color="#2d333c" roughness={0.9} />
+        <meshStandardMaterial color="#2d333c" roughness={0.95} />
       </mesh>
 
       {/* Wall panel (clickable) */}
@@ -105,7 +110,7 @@ function Room({ onSelect }: { onSelect: (k: ItemKey) => void }) {
       <Clickable onPick={() => onSelect("blinds")}>
         <mesh position={[2.1, 1.7, -2.9]}>
           <boxGeometry args={[1.6, 1.8, 0.1]} />
-          <meshStandardMaterial color="#cfe8ff" emissive="#bcdcff" emissiveIntensity={0.5} />
+          <meshStandardMaterial color="#cfe8ff" emissive="#bcdcff" emissiveIntensity={0.6} />
         </mesh>
         {[2.3, 2.0, 1.7, 1.4, 1.1].map((y, i) => (
           <mesh key={i} position={[2.1, y, -2.84]}>
@@ -170,7 +175,7 @@ function Room({ onSelect }: { onSelect: (k: ItemKey) => void }) {
           </mesh>
           <mesh position={[0, 1.03, 0]} castShadow>
             <boxGeometry args={[1.25, 0.1, 1.95]} />
-            <meshStandardMaterial color="#f3f1ec" roughness={0.18} metalness={0.5} />
+            <meshStandardMaterial color="#f3f1ec" roughness={0.22} metalness={0.35} />
           </mesh>
         </group>
       </Clickable>
@@ -189,7 +194,6 @@ export function HeroExperience() {
   function setCam(c: [number, number, number, number, number, number]) {
     camRef.current?.setLookAt(c[0], c[1], c[2], c[3], c[4], c[5], true);
   }
-
   function enterExplore() {
     setExplore(true);
     setCam(INSIDE_CAM);
@@ -206,31 +210,36 @@ export function HeroExperience() {
     document.body.style.cursor = "auto";
   }
 
-  const glow = (
-    <div className="absolute inset-0" style={{ background: "radial-gradient(50% 55% at 50% 45%, #f59e0b40 0%, transparent 70%)" }} />
-  );
-
   return (
-    <div className="relative h-full w-full">
-      {glow}
+    <div className="relative min-h-[100svh] w-full">
+      {/* Ambient glow (always visible, also the load fallback) */}
+      <div className="absolute inset-0" style={{ background: "radial-gradient(50% 55% at 50% 45%, #f59e0b40 0%, transparent 70%)" }} />
 
-      {mounted && (
-        <Canvas shadows dpr={[1, 1.6]} camera={{ position: [HERO_CAM[0], HERO_CAM[1], HERO_CAM[2]], fov: 40 }} gl={{ antialias: true, alpha: true }}>
-          <Suspense fallback={null}>
-            {/* Studio HDRI lights + reflects the scene (luxe product-render look) */}
-            <Environment files="/hdri/studio.exr" environmentIntensity={0.55} />
-            <ambientLight intensity={0.2} />
-            <directionalLight position={[6, 8, 5]} intensity={1.6} color="#fff4dc" castShadow shadow-mapSize={[1024, 1024]} />
-            <pointLight position={[-4, 3, 2]} intensity={22} color="#f59e0b" />
-            <pointLight position={[3, 2, 3]} intensity={10} color="#fb7185" />
+      {/* 3D canvas fills the hero */}
+      <div className="absolute inset-0">
+        {mounted && (
+          <Canvas shadows dpr={[1, 1.6]} camera={{ position: [HERO_CAM[0], HERO_CAM[1], HERO_CAM[2]], fov: 40 }} gl={{ antialias: true, alpha: true }}>
+            {/* Reliable lighting — never depends on the HDRI */}
+            <ambientLight intensity={0.55} />
+            <directionalLight position={[6, 8, 5]} intensity={2.1} color="#fff4dc" castShadow shadow-mapSize={[1024, 1024]} />
+            <pointLight position={[-4, 3, 2]} intensity={28} color="#f59e0b" />
+            <pointLight position={[3, 2, 3]} intensity={12} color="#fb7185" />
+
+            {/* Optional HDRI reflections — isolated so it can't block or crash the room */}
+            <SafeBoundary>
+              <Suspense fallback={null}>
+                <Environment files="/hdri/studio.exr" environmentIntensity={0.5} />
+              </Suspense>
+            </SafeBoundary>
+
             <Float speed={0.6} rotationIntensity={0} floatIntensity={0.25} enabled={!explore}>
               <Room onSelect={pick} />
             </Float>
             <ContactShadows position={[0, 0.01, 0]} opacity={0.4} scale={12} blur={2.4} far={4} />
-          </Suspense>
-          <CameraControls ref={camRef} enabled={explore} minPolarAngle={0.4} maxPolarAngle={Math.PI / 2.05} />
-        </Canvas>
-      )}
+            <CameraControls ref={camRef} enabled={explore} minPolarAngle={0.4} maxPolarAngle={Math.PI / 2.05} />
+          </Canvas>
+        )}
+      </div>
 
       {/* Hero title overlay */}
       {!explore && (
