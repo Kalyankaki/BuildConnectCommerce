@@ -14,7 +14,7 @@ export default async function CatalogPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold">Catalog &amp; pricing</h1>
+      <h1 className="font-serif text-3xl font-semibold tracking-tight">Catalog &amp; pricing</h1>
       <p className="mt-1 text-slate-500">
         Toggle products on/off and set your markup. Markup precedence: per-product → default policy.
       </p>

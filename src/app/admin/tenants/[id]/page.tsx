@@ -15,7 +15,7 @@ export default async function AdminTenantDetail({ params }: { params: Promise<{ 
   return (
     <div className="max-w-2xl">
       <Link href="/admin/tenants" className="text-sm underline">← Tenants</Link>
-      <h1 className="mt-2 text-2xl font-bold">{tenant.displayName}</h1>
+      <h1 className="mt-2 font-serif text-3xl font-semibold tracking-tight">{tenant.displayName}</h1>
       <p className="text-slate-500">
         {tenant.slug} · status <strong>{tenant.status}</strong>
         {tenant.customDomain ? ` · ${tenant.customDomain}${tenant.customDomainVerified ? " ✓" : " (unverified)"}` : ""}

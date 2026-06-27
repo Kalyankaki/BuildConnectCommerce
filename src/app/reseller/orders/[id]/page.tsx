@@ -23,7 +23,7 @@ export default async function ResellerOrderDetail({ params }: { params: Promise<
       <Link href="/reseller/orders" className="text-sm underline">
         ← Orders
       </Link>
-      <h1 className="mt-2 text-2xl font-bold">Order {order.id.slice(0, 8)}</h1>
+      <h1 className="mt-2 font-serif text-3xl font-semibold tracking-tight">Order {order.id.slice(0, 8)}</h1>
       <p className="text-slate-500">
         {order.customerEmail} · status <strong>{order.status}</strong> · {formatCents(order.totalCents)}
       </p>

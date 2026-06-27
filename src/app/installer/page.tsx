@@ -22,7 +22,7 @@ export default async function InstallerJobs() {
   if (byOrder.size === 0) {
     return (
       <div>
-        <h1 className="text-2xl font-bold">My jobs</h1>
+        <h1 className="font-serif text-3xl font-semibold tracking-tight">My jobs</h1>
         <p className="mt-4 text-slate-500">No jobs assigned to you yet.</p>
       </div>
     );
@@ -30,7 +30,7 @@ export default async function InstallerJobs() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">My jobs</h1>
+      <h1 className="font-serif text-3xl font-semibold tracking-tight">My jobs</h1>
       {[...byOrder.entries()].map(([orderId, appts]) => {
         const first = appts[0];
         const allDone = appts.every((a) => a.status === "completed");

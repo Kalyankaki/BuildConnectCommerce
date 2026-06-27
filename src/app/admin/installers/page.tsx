@@ -8,7 +8,7 @@ export default async function AdminInstallers() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold">Installer directory</h1>
+      <h1 className="font-serif text-3xl font-semibold tracking-tight">Installer directory</h1>
       {installers.length === 0 ? (
         <p className="mt-4 text-slate-500">No installers yet.</p>
       ) : (

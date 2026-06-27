@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { updateBranding } from "@/server/reseller-actions";
 import { THEMES, getTheme, themeForPrimary } from "@/lib/themes";
+import { ImageUpload } from "@/components/image-upload";
 
 const input = "w-full rounded-lg border px-3 py-2";
 
@@ -56,10 +57,7 @@ export function BrandingEditor({
           </div>
         </div>
 
-        <label className="block">
-          <span className="mb-1 block text-sm font-medium">Logo URL</span>
-          <input name="logoUrl" defaultValue={initial.logoUrl} placeholder="https://…" className={input} />
-        </label>
+        <ImageUpload name="logoUrl" defaultValue={initial.logoUrl} bucket="branding" label="Logo" />
         <label className="block">
           <span className="mb-1 block text-sm font-medium">Support email</span>
           <input type="email" name="supportEmail" defaultValue={initial.supportEmail} className={input} />

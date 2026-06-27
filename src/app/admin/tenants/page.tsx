@@ -10,7 +10,7 @@ export default async function AdminTenants() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold">Tenants</h1>
+      <h1 className="font-serif text-3xl font-semibold tracking-tight">Tenants</h1>
       <div className="mt-6 overflow-x-auto rounded-xl border bg-white">
         <table className="w-full text-sm">
           <thead className="border-b text-left text-slate-500">

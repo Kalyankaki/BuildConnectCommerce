@@ -22,7 +22,7 @@ export default async function AdminServices() {
 
   return (
     <div className="space-y-8">
-      <h1 className="text-2xl font-bold">Services &amp; zones</h1>
+      <h1 className="font-serif text-3xl font-semibold tracking-tight">Services &amp; zones</h1>
 
       <section className="grid gap-6 lg:grid-cols-2">
         <div className="rounded-xl border bg-white p-4">

@@ -6,6 +6,7 @@ import {
 } from "@/server/admin-data";
 import { createProduct, createVariant, createVertical } from "@/server/admin-actions";
 import { formatCents } from "@/lib/format";
+import { ImageUpload } from "@/components/image-upload";
 
 export const metadata = { title: "Master catalog" };
 const input = "w-full rounded-lg border px-3 py-2 text-sm";
@@ -20,7 +21,7 @@ export default async function AdminCatalog() {
 
   return (
     <div className="space-y-8">
-      <h1 className="text-2xl font-bold">Master catalog</h1>
+      <h1 className="font-serif text-3xl font-semibold tracking-tight">Master catalog</h1>
 
       <div className="overflow-x-auto rounded-xl border bg-white">
         <table className="w-full text-sm">
@@ -73,7 +74,7 @@ export default async function AdminCatalog() {
           <input name="name" placeholder="Product name" className={input} />
           <input name="brand" placeholder="Brand (optional)" className={input} />
           <input name="description" placeholder="Description (optional)" className={input} />
-          <input name="defaultImageUrl" placeholder="Image URL (optional)" className={input} />
+          <ImageUpload name="defaultImageUrl" bucket="uploads" label="Product image" />
           <button className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white">Create</button>
         </form>
 

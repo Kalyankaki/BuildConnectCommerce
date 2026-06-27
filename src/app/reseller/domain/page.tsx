@@ -11,7 +11,7 @@ export default async function DomainPage() {
 
   return (
     <div className="max-w-2xl">
-      <h1 className="text-2xl font-bold">Custom domain</h1>
+      <h1 className="font-serif text-3xl font-semibold tracking-tight">Custom domain</h1>
       <p className="mt-1 text-slate-500">
         Your storefront is always available at <code>{tenant.slug}.{rootDomain}</code>. Add your own
         domain to brand it fully.

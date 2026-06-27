@@ -12,7 +12,7 @@ export default async function OrdersBoard() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold">Orders</h1>
+      <h1 className="font-serif text-3xl font-semibold tracking-tight">Orders</h1>
       <div className="mt-6 flex gap-4 overflow-x-auto pb-4">
         {COLUMNS.map((col) => {
           const items = orders.filter((o) => o.status === col);
