@@ -12,14 +12,22 @@ export function RoomDisplay({
   activeZone,
   onZoneClick,
   imageSrc,
+  fullBleed = false,
 }: {
   zones: Zone[];
   activeZone: ZoneId | null;
   onZoneClick: (id: ZoneId) => void;
   imageSrc?: string;
+  fullBleed?: boolean;
 }) {
   return (
-    <div className="relative h-full w-full overflow-hidden rounded-3xl border border-white/10 bg-[#1a1714] shadow-2xl">
+    <div
+      className={
+        fullBleed
+          ? "absolute inset-0 h-full w-full overflow-hidden"
+          : "relative h-full w-full overflow-hidden rounded-3xl border border-white/10 bg-[#1a1714] shadow-2xl"
+      }
+    >
       {imageSrc ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={imageSrc} alt="Luxury living room" className="absolute inset-0 h-full w-full object-cover" />
