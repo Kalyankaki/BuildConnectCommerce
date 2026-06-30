@@ -43,7 +43,7 @@ function MarketingLanding() {
   return (
     <>
       {/* Interactive luxury living-room configurator (hero) */}
-      <RoomConfigurator />
+      <RoomConfigurator imageSrc="/room.png" />
 
       {/* Bundle strip */}
       <section className="border-y border-slate-200 bg-white">

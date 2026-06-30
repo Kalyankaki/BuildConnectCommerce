@@ -54,8 +54,8 @@ export const ZONES: Zone[] = [
     label: "Ceiling",
     blurb: "Wood slats & accent panels",
     icon: Layers,
-    hotspot: { top: 18, left: 50 },
-    region: { top: 0, left: 8, width: 84, height: 26 },
+    hotspot: { top: 9, left: 50 },
+    region: { top: 0, left: 4, width: 92, height: 16 },
     options: [
       { id: "ceiling-oak", name: "Custom Oak Slats", material: "Solid white-oak battens", items: items("ceiling-oak", 3200, 280, 1900, 350) },
       { id: "ceiling-acoustic", name: "Acoustic Felt Panels", material: "PET acoustic + walnut trim", items: items("ceiling-acoustic", 2400, 240, 1500, 350) },
@@ -66,8 +66,8 @@ export const ZONES: Zone[] = [
     label: "Main Wall",
     blurb: "Concrete or Venetian plaster",
     icon: PanelTop,
-    hotspot: { top: 40, left: 24 },
-    region: { top: 24, left: 6, width: 40, height: 46 },
+    hotspot: { top: 34, left: 55 },
+    region: { top: 20, left: 40, width: 42, height: 42 },
     options: [
       { id: "wall-concrete", name: "Board-Formed Concrete", material: "Architectural concrete panels", items: items("wall-concrete", 4100, 320, 2600, 400) },
       { id: "wall-plaster", name: "Venetian Plaster", material: "Hand-troweled lime plaster", items: items("wall-plaster", 2900, 180, 2100, 250) },
@@ -78,8 +78,8 @@ export const ZONES: Zone[] = [
     label: "Flooring",
     blurb: "Hardwood & premium rug",
     icon: Grid2x2,
-    hotspot: { top: 80, left: 42 },
-    region: { top: 68, left: 0, width: 100, height: 32 },
+    hotspot: { top: 88, left: 38 },
+    region: { top: 80, left: 0, width: 100, height: 20 },
     options: [
       { id: "floor-oak", name: "European Oak Plank", material: "Wide-plank engineered oak", items: items("floor-oak", 3800, 300, 2200, 600) },
       { id: "floor-stone", name: "Honed Limestone + Wool Rug", material: "Large-format stone + hand-knotted wool", items: items("floor-stone", 5200, 420, 3100, 600) },
@@ -90,11 +90,11 @@ export const ZONES: Zone[] = [
     label: "Furniture",
     blurb: "Sectional & accent chairs",
     icon: Sofa,
-    hotspot: { top: 66, left: 62 },
-    region: { top: 52, left: 40, width: 56, height: 36 },
+    hotspot: { top: 70, left: 47 },
+    region: { top: 56, left: 22, width: 60, height: 34 },
     options: [
-      { id: "furn-sectional", name: "Low-Profile Sectional", material: "Boucle + kiln-dried hardwood frame", items: items("furn-sectional", 6400, 450, 600, 350) },
-      { id: "furn-lounge", name: "Lounge Chair Pair", material: "Full-grain leather + oak", items: items("furn-lounge", 4200, 380, 400, 250) },
+      { id: "furn-dining", name: "Marble Dining Set", material: "Marble table + upholstered chairs", items: items("furn-dining", 7200, 480, 700, 400) },
+      { id: "furn-banquette", name: "Lounge Banquette", material: "Boucle banquette + oak", items: items("furn-banquette", 4200, 380, 500, 250) },
     ],
   },
 ];
