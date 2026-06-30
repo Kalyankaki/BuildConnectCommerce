@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { getCurrentTenant, getStoreBase } from "@/server/tenant";
 import { getEnabledVerticals } from "@/server/storefront";
-import { HeroExperience } from "./hero-experience";
+import { RoomConfigurator } from "@/components/interactive-room/RoomConfigurator";
 import { CountUp, Reveal } from "@/components/motion-ui";
 
 export default async function HomePage() {
@@ -42,10 +42,8 @@ const SHOWCASE = [
 function MarketingLanding() {
   return (
     <>
-      {/* Grand interactive 3D room hero */}
-      <section className="relative min-h-[100svh] overflow-hidden bg-slate-950">
-        <HeroExperience />
-      </section>
+      {/* Interactive luxury living-room configurator (hero) */}
+      <RoomConfigurator />
 
       {/* Bundle strip */}
       <section className="border-y border-slate-200 bg-white">
