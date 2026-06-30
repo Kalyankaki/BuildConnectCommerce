@@ -38,6 +38,11 @@ export function RoomConfigurator({ imageSrc, ctaHref = "/onboarding" }: { imageS
             "linear-gradient(180deg, rgba(15,12,10,.78) 0%, rgba(15,12,10,.15) 26%, rgba(15,12,10,.10) 55%, rgba(15,12,10,.88) 100%)",
         }}
       />
+      {/* Corner vignette — blends the image into the section */}
+      <div
+        className="pointer-events-none absolute inset-0"
+        style={{ background: "radial-gradient(120% 95% at 50% 42%, transparent 46%, rgba(0,0,0,0.6) 100%)" }}
+      />
 
       {/* Overlay UI (clicks pass through empty areas to the hotspots) */}
       <div className="pointer-events-none absolute inset-0 mx-auto flex max-w-6xl flex-col px-4 py-10 sm:px-6 sm:py-12">

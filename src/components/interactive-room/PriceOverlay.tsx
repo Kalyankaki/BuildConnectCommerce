@@ -2,6 +2,7 @@
 
 import { Check, X } from "lucide-react";
 import { formatUSD, optionTotal, type Zone } from "./data";
+import { ZoneModel } from "./ZoneModel";
 
 const TYPE_LABEL: Record<string, string> = {
   parts: "Parts",
@@ -28,6 +29,10 @@ export function PriceOverlay({
 
   return (
     <div className="w-full rounded-2xl border border-white/15 bg-white/10 p-5 text-white shadow-2xl backdrop-blur-xl">
+      {/* Rotating 3D preview of this zone's material/object */}
+      <div className="mb-4 h-32 overflow-hidden rounded-xl border border-white/10 bg-gradient-to-br from-white/10 to-black/30">
+        <ZoneModel zone={zone.id} optionId={selectedOptionId} />
+      </div>
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-[0.65rem] font-semibold uppercase tracking-[0.25em] text-amber-300">{zone.label}</p>
